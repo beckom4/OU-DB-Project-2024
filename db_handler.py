@@ -40,7 +40,7 @@ class DB_handler:
                             " date_of_birth DATE, country TEXT) ")
         self.connection.commit()
         self.cursor.execute(" CREATE TABLE m_text.words ( word_id SERIAL PRIMARY KEY, "
-                                                        " word TEXT, occurence occurence_type); ")
+                                                        " word TEXT, occurence occurence_type[]); ")
         self.connection.commit()
         self.cursor.execute(" CREATE TABLE user_input.special_words(group_id SERIAL PRIMARY KEY, "
                             " group_description TEXT, words TEXT[])")
