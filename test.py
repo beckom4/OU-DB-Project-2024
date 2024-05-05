@@ -89,7 +89,7 @@ cursor.close()
 cursor = connection.cursor()
 
 cursor.execute(" INSERT INTO m_text.words (word, occurence) VALUES "
-               " ( 'Dog', (%s, %s, %s, ARRAY[(1,2),(2,3),(3,4)]::position_type[])); ",
+               " ( 'Dog', ARRAY[(%s, %s, %s, ARRAY[(1,2),(2,3),(3,4)]::position_type[])]::occurence_type[]); ",
                (magazine_id, volume_id, article_id))
 connection.commit()
 cursor.execute("SELECT * FROM m_text.words ")
