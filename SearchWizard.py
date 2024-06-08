@@ -1,3 +1,9 @@
+############################################################################################################
+#              This module is responsible for searches in the database according                           #
+#              to key elements provided by the user                                                        #
+#              The functions in this class implement the 3rd requirement of the assignment                 #
+############################################################################################################
+
 from DB_handler import DB_handler
 
 
@@ -15,8 +21,6 @@ class SearchWizard:
     # In that case, we fetch the articles that were written by all of them.
     def search_author_articles(self, author_full_name):
         author_ids = self.db_handler.get_author_id_from_name(author_full_name)
-        print("author_id is ")
-        print(author_ids)
         for author_id_tuple in author_ids:
             author_id = author_id_tuple[0]
             self.db_handler.cursor.execute("SELECT magazine_id, volume_id, article_id "
@@ -28,7 +32,7 @@ class SearchWizard:
     # Search for all the articles in a specific magazine.
     # The assumption is that there are no 2 magazines with the same name.
     def search_magazine_articles(self, magazine_name):
-        magazine_id = self.db_handler.get_magazine_id_from_name(magazine_name)
+        magazine_id = self.db_handler.get_magazine_id_from_name(magazine_name)[0][0]
         self.db_handler.cursor.execute(" SELECT magazine_id, volume_id, article_id "
                                        " FROM art_info.articles WHERE magazine_id = %s", (magazine_id,))
         self.db_handler.connection.commit()
@@ -36,7 +40,7 @@ class SearchWizard:
 
     # Search for all the articles in a specific magazine and volume.
     def search_magazine_volume_articles(self, magazine_name, volume_id):
-        magazine_id = self.db_handler.get_magazine_id_from_name(magazine_name)
+        magazine_id = self.db_handler.get_magazine_id_from_name(magazine_name)[0][0]
         self.db_handler.cursor.execute("SELECT magazine_id, volume_id, article_id"
                                        " FROM art_info.articles WHERE magazine_id = %s AND volume_id = %s",
                                        (magazine_id, volume_id))
@@ -45,7 +49,7 @@ class SearchWizard:
 
     # Search for all the articles in a specific magazine, volume and page range.
     def search_magazine_volume_page_articles(self, magazine_name, volume_id, page_range):
-        magazine_id = self.db_handler.get_magazine_id_from_name(magazine_name)
+        magazine_id = self.db_handler.get_magazine_id_from_name(magazine_name)[0][0]
         self.db_handler.cursor.execute(" SELECT magazine_id, volume_id, article_id"
                                        " FROM art_info.articles WHERE magazine_id = %s AND volume_id = %s AND "
                                        "page_range @> ARRAY[%s]", (magazine_id, volume_id, page_range))
