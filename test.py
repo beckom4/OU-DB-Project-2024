@@ -7,6 +7,8 @@ from DB_handler import DB_handler
 
 from SearchWizard import SearchWizard
 
+from TextLoader import TextLoader
+
 # Connect to the database. PLEASE MAKE SURE TO change the  credentials to the ones on your local server.
 connection = psycopg2.connect(dbname="db_project", user="omri", password="omri", options="-c search_path=text_handle")
 cursor = connection.cursor()
@@ -21,49 +23,43 @@ db_test.create_tables()
 
 db_test.create_triggers()
 
+tl = TextLoader()
+
 sw = SearchWizard()
+
+## Tests on Authors table
+##
+author_id = tl.load_author('Yuval Levy')
+cursor.execute(" SELECT * FROM art_info.authors ")
+for row in cursor:
+    print(row)
+##
+## End of tests on Authors table
 
 ## Tests on Magazines table
 ##
-# cursor.execute("CREATE TABLE Magazines(magazine_id VARCHAR2(36) DEFAULT RAWTOHEX(SYS_GUID()) PRIMARY KEY,"
-#                            "magazine_name VARCHAR(50),e_date DATE, location VARCHAR(50))")
-cursor.execute(" INSERT INTO art_info.Magazines (magazine_id, magazine_name, e_date, location) VALUES (gen_random_uuid (), "
-               " 'National Geographic', '1923-05-30', 'New York')")
-cursor.execute(" INSERT INTO art_info.Magazines (magazine_id, magazine_name, e_date, location) VALUES (gen_random_uuid (), "
-               " 'TIME', '1987-05-30', 'Chicago') ")
-print("Magazines table: ")
+magazine_id = tl.load_magazine('National Geographic')
+magazine_id2 = tl.load_magazine('TIME')
 cursor.execute("SELECT * FROM art_info.magazines")
 for row in cursor:
     print(row)
-
-cursor.execute("SELECT magazine_id FROM art_info.magazines WHERE magazine_name = 'National Geographic'")
-magazine_id = cursor.fetchall()[0][0]
-
-# cursor.execute("TRUNCATE TABLE magazines")
-# cursor.execute("DROP TABLE magazines")
+cursor.close()
 ##
 ## End of tests on Magazines table
 
 ## Tests on Volumes table
 ##
-# cursor.execute("CREATE TABLE Volumes(magazine_id VARCHAR(36), volume_id NUMBER, issue_date DATE,"
-#                     "CONSTRAINT pk_volumes PRIMARY KEY (magazine_id, volume_id),"
-#                     "CONSTRAINT magazine_id_fk FOREIGN KEY (magazine_id) REFERENCES Magazines (magazine_id)")
-cursor.close()
 cursor = connection.cursor()
-cursor.execute("INSERT INTO art_info.Volumes (magazine_id, issue_date) VALUES (%s, %s)",
-               (magazine_id, datetime(1987, 5, 30).date()))
-connection.commit()
-print("Volumes table: ")
+# cursor.execute("INSERT INTO art_info.Volumes (magazine_id, issue_date) VALUES (%s, %s)",
+#                (magazine_id, datetime(1987, 5, 30).date()))
+# connection.commit()
+volume_id = tl.load_volume(magazine_id, 1, datetime(1987, 5, 30).date())
+volume_id2 = tl.load_volume(magazine_id, 2, datetime(1987, 6, 30).date())
 cursor.execute("SELECT * FROM art_info.Volumes")
 for row in cursor:
     print(row)
 cursor.execute("SELECT volume_id FROM art_info.volumes ")
 volume_id = cursor.fetchall()[0][0]
-
-# cursor.execute("INSERT INTO Volumes (magazine_id, issue_date) VALUES ('8CD3041608714218BD3850949D53F5E5', "
-#              "DATE '1963-05-30')")
-
 cursor.close()
 
 ##
@@ -72,20 +68,18 @@ cursor.close()
 ## Tests on Articles table
 ##
 cursor = connection.cursor()
-
-cursor.execute("INSERT INTO art_info.Articles (magazine_id, volume_id, article_title, page_range, author_id) " 
-                " VALUES (%s, %s, 'The Big Bang Theory', ARRAY[4,5], 1) ",
-               (magazine_id, volume_id))
-connection.commit()
+tl.load_article(magazine_id, volume_id, 'The Big Bang Theory', [4, 5], author_id)
+tl.load_article(magazine_id, volume_id2, 'friends', [2, 3, 4], author_id)
 cursor.execute("SELECT * FROM art_info.Articles ORDER BY magazine_id, volume_id, article_id ")
-
-cursor.execute("SELECT volume_id FROM art_info.articles ")
-article_id = cursor.fetchall()[0][0]
 
 print("Articles table: ")
 
 for row in cursor:
     print(row)
+
+cursor.execute("SELECT volume_id FROM art_info.articles ")
+article_id = cursor.fetchall()[0][0]
+
 
 cursor.close()
 
@@ -93,12 +87,22 @@ cursor.close()
 
 ## Tests on words table
 ##
+# cursor.execute(" INSERT INTO text_handle.words (word, occurrence) VALUES "
+#                " ( 'Dog', ARRAY[(%s, %s, %s, ARRAY[(1,2),(2,3),(3,4)]::position_type[])]::occurrence_type[]); ",
+#                (magazine_id, volume_id, article_id))
+# connection.commit()
+
+word_list = [['Dog', [(1,2,3), (2,3,4), (3,4,5)]], ['Cat', [(1,1,1), (2,2,3), (3,3,4)]],
+             ['Bird', [(1,2,1), (1,2,3), (3,5,4)]], ['Fish', [(1,1,2), (1,1,3), (1,1,4)]]]
+
+tl.load_text([magazine_id, volume_id, article_id], word_list)
+
+word_list2 = [['Dog', [(1,1,1), (2,2,2), (3,3,3)]], ['Bird', [(2,2,2), (3,3,3), (4,4,4)]]]
+
+tl.load_text([magazine_id, 2, article_id], word_list2)
+
 cursor = connection.cursor()
 
-cursor.execute(" INSERT INTO text_handle.words (word, occurrence) VALUES "
-               " ( 'Dog', ARRAY[(%s, %s, %s, ARRAY[(1,2),(2,3),(3,4)]::position_type[])]::occurrence_type[]); ",
-               (magazine_id, volume_id, article_id))
-connection.commit()
 cursor.execute("SELECT * FROM text_handle.words ")
 
 print("Words table: ")
@@ -115,35 +119,23 @@ cursor.close()
 ##
 ## End of tests on Articles table
 
-## Tests on Authors table
-##
-cursor = connection.cursor()
-
-cursor.execute("INSERT INTO art_info.authors(first_name, last_name, date_of_birth, country) " 
-                " VALUES ( 'Yuval', 'Levy', DATE '1987-05-30', 'Panama') ")
-connection.commit()
-cursor.execute(" SELECT * FROM art_info.authors ")
-for row in cursor:
-    print(row)
-
-
 ## Tests on SearchWizard
 article_id_test = sw.search_author_articles('Yuval Levy')
 print("article id of Yuval Levy is: ")
 print(article_id_test)
-
+#
 article_id_test = sw.search_magazine_articles('National Geographic')
 print("article id of National Geographic is: ")
 print(article_id_test)
-
+#
 article_id_test = sw.search_magazine_volume_articles('National Geographic', 1)
 print("article ids of National Geographic volume 1 is: ")
 print(article_id_test)
-
+#
 article_id_test = sw.search_magazine_volume_page_articles('National Geographic', 1, [4, 5])
 print("article ids of National Geographic volume 1 pages 4-5 is: ")
 print(article_id_test)
-
+#
 article_id_test = sw.search_articles_date(datetime(1987, 5, 30).date())
 print("article ids of 1987-05-30 is: ")
 print(article_id_test)
