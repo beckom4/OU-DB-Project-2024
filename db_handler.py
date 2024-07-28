@@ -42,20 +42,20 @@ class DB_handler:
 
         # Function to create all the required tables:
 
-    # Magazines, Volumes, Articles, Authors,
+    # Magazines, Volumes, Articles, Reporters,
     # As part of the creation of the articles table, a new type is created to store the article's pages
     def create_tables(self):
         self.cursor.execute(" CREATE TABLE art_info.Newspapers(np_id UUID PRIMARY KEY, np_name TEXT) ")
         self.connection.commit()
         self.cursor.execute("""
                             CREATE TABLE art_info.Articles( article_id SERIAL PRIMARY KEY, article_title TEXT, 
-                            date DATE ,author_id INT, np_id UUID,
+                            date DATE ,reporter_id INT, np_id UUID,
                             CONSTRAINT articles_fk FOREIGN KEY (np_id)
                             REFERENCES art_info.Newspapers (np_id));
                             """)
         self.connection.commit()
         self.cursor.execute(
-            " CREATE TABLE art_info.authors(author_id SERIAL PRIMARY KEY, first_name TEXT, last_name TEXT) ")
+            " CREATE TABLE art_info.reporters(reporter_id SERIAL PRIMARY KEY, first_name TEXT, last_name TEXT) ")
         self.connection.commit()
         self.cursor.execute(""" CREATE TABLE text_handle.words ( word_id SERIAL PRIMARY KEY, 
                                 word TEXT, occurrences occurrence_type[]); """)
@@ -105,11 +105,11 @@ class DB_handler:
 
     # Getters:
 
-    # Get author_id from author's name:
-    def get_author_id_from_name(self, author_full_name):
-        first_name, last_name = parse_name(author_full_name)
-        self.cursor.execute(" SELECT author_id "
-                            " FROM art_info.authors "
+    # Get reporter_id from reporter's name:
+    def get_reporter_id_from_name(self, reporter_full_name):
+        first_name, last_name = parse_name(reporter_full_name)
+        self.cursor.execute(" SELECT reporter_id "
+                            " FROM art_info.reporters "
                             " WHERE LOWER(first_name)=LOWER(%s) AND LOWER(last_name) = lower(%s) ",
                             (first_name, last_name))
         return self.cursor.fetchall()
@@ -129,3 +129,12 @@ class DB_handler:
                             " WHERE word = %s ",
                             (word,))
         return self.cursor.fetchall()
+
+    def get_article_id_from_title(self, article_title):
+        self.cursor.execute(" SELECT article_id "
+                            " FROM art_info.articles "
+                            " WHERE article_title = %s ",
+                            (article_title,))
+        return self.cursor.fetchall()
+
+
