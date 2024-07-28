@@ -1,24 +1,33 @@
 from DB_handler import DB_handler
 from LinkedList import *
 import re
+import ast
 
 
-def parse_string_to_tuple(input_string):
-    tuple_strings = re.findall(r'\(([^()]*)\)', input_string.strip("'"))
-    art_id_elements = tuple_strings[0].split(',')
-    a_first_element = art_id_elements[0]
-    a_second_element = int(art_id_elements[1])
-    a_third_element = int(art_id_elements[2])
-    art_id_tup = (a_first_element, a_second_element, a_third_element)
-    position_elements = tuple_strings[1].split(',')
-    p_first_element = int(position_elements[0])
-    p_second_element = int(position_elements[1])
-    p_third_element = int(position_elements[2])
-    position_tup = (p_first_element, p_second_element, p_third_element)
-    tup_str = tuple_strings[2].replace(r'"" ""', "' '").replace(r'"",""', ',')
-    final_version = tup_str.split(',')
-    ext_char_tup = tuple(final_version)
-    res = (art_id_tup, position_tup, ext_char_tup)
+def parse_string_to_tuple(word, input_string):
+    print("word is: ", word)
+    print("input_string is: ", input_string)
+    res = []
+    # print("input string is: ", input_string)
+    tuple_strings = (input_string
+                                    .replace(r'"', '') \
+                                    .replace(r'\\"" \\""', "' '")\
+                                    .replace(r'\\', "'")\
+                                    .replace('\n', '@@@') \
+                                    .replace(r'\\, \\', ','))
+    print("tuple_strings is: ", tuple_strings)
+    parsed_tuple = ast.literal_eval(tuple_strings)
+    array_of_tuples = list(parsed_tuple[1])
+    for tup in array_of_tuples:
+        if '@@@' in tup[3]:
+            temp_str = tup[3].replace(r'@@@', '\n')
+            print("Good test. We should be here. and temp_Str is: ", temp_str)
+            final_word = word + temp_str
+        else:
+            final_word = word + tup[3]
+        new_tup = tup[:3] + (final_word,)
+        res.append(new_tup)
+    print("res is: ", res)
     return res
 
 class TextBuilder:
@@ -27,42 +36,40 @@ class TextBuilder:
         self.node = Node()
         self.ll = LinkedList()
 
-    # def build_text(self, article_id_tuple):
-    #     self.db_handler.cursor.execute("SELECT a.article_title, a.page_range, v.issue_date, "
-    #                                    " aut.first_name, aut.last_name "
-    #                                    " FROM art_info.articles a JOIN art_info.volumes v "
-    #                                    " ON a.magazine_id = v.magazine_id AND  a.volume_id = v.volume_id JOIN art_info.authors aut"
-    #                                    " ON a.author_id = aut.author_id "
-    #                                    " WHERE a.magazine_id = %s AND a.volume_id = %s AND a.article_id = %s ",
-    #                                    (article_id_tuple[0], article_id_tuple[1], article_id_tuple[2]))
-    #     self.db_handler.connection.commit()
-    #     article_title, page_range, date_of_issue, aut_f_name, aut_last_name = self.db_handler.cursor.fetchall()[0]
-    #     # print("page_range: ", page_range)
-    #     # print("article_title: ", article_title)
-    #     # print("date_of_issue: ", date_of_issue)
-    #     # print("aut_f_name: ", aut_f_name)
-    #     # print("aut_last_name: ", aut_last_name)
-    #     self.db_handler.cursor.execute( " SELECT word_id, word, unnest(occurrences) "
-    #                                     " FROM text_handle.words, "
-    #                                     " LATERAL unnest(occurrences) AS outer_tuple "
-    #                                     " WHERE (outer_tuple).article_id = ROW(%s,%s,%s)::article_id_type; ",
-    #                                     (article_id_tuple[0], article_id_tuple[1], article_id_tuple[2]))
-    #     self.db_handler.connection.commit()
-    #
-    #
-    #     word_occurrences = []
-    #     print("Test Words table: ")
-    #
-    #     for row in self.db_handler.cursor:
-    #         print(row)
-    #         ext_tup = parse_string_to_tuple(row[2])
-    #         print("word is: ", row[1])
-    #         word_occurrences.append(ext_tup)
-    #         print(ext_tup[0])
-    #         print(ext_tup[1])
-    #         print(ext_tup[2])
-    #
-    #     print("words: ", word_occurrences)
+    def build_entire_text(self, article_title):
+        text_arr = []
+        article_id = self.db_handler.get_article_id_from_title(article_title)[0][0]
+        print("article_id: ", article_id)
+        self.db_handler.cursor.execute("""SELECT a.article_title, a.date, r.first_name, r.last_name 
+                                          FROM art_info.articles a JOIN art_info.reporters r 
+                                          ON a.reporter_id = r.reporter_id 
+                                          WHERE a.article_id = %s """,
+                                         (article_id, ))
+        self.db_handler.connection.commit()
+        article_title, date_of_issue, rep_f_name, rep_last_name = self.db_handler.cursor.fetchall()[0]
+        print("article_title: ", article_title)
+        print("date_of_issue: ", date_of_issue)
+        print("rep_f_name: ", rep_f_name)
+        print("rep_last_name: ", rep_last_name)
+        self.db_handler.cursor.execute( " SELECT word_id, word, unnest(occurrences) "
+                                        " FROM text_handle.words, "
+                                        " LATERAL unnest(occurrences) AS outer_tuple "
+                                        " WHERE (outer_tuple).article_id = %s ",
+                                        (article_id, ))
+        self.db_handler.connection.commit()
+        print("Test Words table: ")
+        for row in self.db_handler.cursor:
+            # print("each row is :")
+            # print(row)
+            tup_arr = parse_string_to_tuple(row[1],row[2])
+            text_arr.extend(tup_arr)
+        sorted_text_arr = sorted(text_arr, key=lambda x: (x[0], x[1], x[2]))
+        print("sorted_text_arr: ", sorted_text_arr)
+        final_text = ""
+        for tup in sorted_text_arr:
+            final_text += f"{tup[3]}"
+        print("final_text: ")
+        print(final_text)
 
     def all_words(self):
         self.db_handler.cursor.execute(" SELECT word "
