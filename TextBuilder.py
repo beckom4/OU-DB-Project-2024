@@ -4,9 +4,8 @@ import re
 import ast
 
 
+
 def parse_string_to_tuple(word, input_string):
-    print("word is: ", word)
-    print("input_string is: ", input_string)
     res = []
     # print("input string is: ", input_string)
     tuple_strings = (input_string
@@ -15,19 +14,22 @@ def parse_string_to_tuple(word, input_string):
                                     .replace(r'\\', "'")\
                                     .replace('\n', '@@@') \
                                     .replace(r'\\, \\', ','))
-    print("tuple_strings is: ", tuple_strings)
     parsed_tuple = ast.literal_eval(tuple_strings)
     array_of_tuples = list(parsed_tuple[1])
     for tup in array_of_tuples:
-        if '@@@' in tup[3]:
+        if '@@@@@' in tup[3]:
+            temp_str = tup[3].replace(r'@@@@@', '"\n')
+            final_word = word + temp_str
+        elif '@@@' in tup[3]:
             temp_str = tup[3].replace(r'@@@', '\n')
-            print("Good test. We should be here. and temp_Str is: ", temp_str)
+            final_word = word + temp_str
+        elif '@@' in tup[3]:
+            temp_str = tup[3].replace(r'@@', '"')
             final_word = word + temp_str
         else:
             final_word = word + tup[3]
         new_tup = tup[:3] + (final_word,)
         res.append(new_tup)
-    print("res is: ", res)
     return res
 
 class TextBuilder:
