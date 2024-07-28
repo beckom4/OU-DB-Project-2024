@@ -14,85 +14,96 @@ dict_array = [
     {'When': [(1, 1, 1, ' ')]},
     {'he': [(1, 1, 2, ' ')]},
     {'was': [(1, 1, 3, ' ')]},
-    {'a': [(1, 1, 4, ' '), (1, 1, 11, ' '), (2, 1, 17, ' ')]},
+    {'a': [(1, 1, 4, ' '), (1, 1, 11, ' '), (1,2,3,' '),(2, 1, 17, ' ')]},
     {'boy': [(1, 1, 5, ' ')]},
     {'growing': [(1, 1, 6, ' ')]},
     {'up': [(1, 1, 7, ' ')]},
-    {'in': [(1, 1, 8, ' '), (1, 1, 13, ' '), (1, 1, 30, ' '), (2, 1, 65, ' ')]},
+    {'in': [(1, 1, 8, ' '), (1, 1, 13, ' '), (1, 1, 30, ' '), (1,2,11,' '),(2, 1, 65, ' ')]},
     {'Wadi': [(1, 1, 9, ' ')]},
-    {'Musa': [(1, 1, 10, ' ')]},
+    {'Musa': [(1, 1, 10, ', ')]},
     {'town': [(1, 1, 12, ' ')]},
     {'southern': [(1, 1, 14, ' ')]},
-    {'Jordan': [(1, 1, 15, ' '), (2, 1, 83, ' ')]},
+    {'Jordan': [(1, 1, 15, ' '), (1,2,13,', '), (2, 1, 83, ' ')]},
     {'Mohamad': [(1, 1, 16, ' ')]},
-    {'Alfarajat': [(1, 1, 17, ' '), (2, 1, 5, ', '), (2, 1, 312, ' ')]},
-    {'says': [(1, 1, 18, ' '), (2, 1, 318, ' '), (2, 2, 6, ' ')]},
-    {'his': [(1, 1, 19, ' '), (2, 1, 90, ' '), (2, 1, 200, ' ')]},
-    {'father': [(1, 1, 20, ' '), (2, 1, 204, ' ')]},
+    {'Alfarajat': [(1, 1, 17, ' '), (1, 2, 1, ', '), (1,3,14,' ')]},
+    {'says': [(1, 1, 18, ' '), (1,2,14,' '), (1,3,15, '. "'), (2, 2, 6, ' ')]},
+    {'his': [(1, 1, 19, ' '), (1,2,35,' '), (2, 1, 200, ' ')]},
+    {'father': [(1, 1, 20, ' '), (1,2,36,' ')]},
     {'told': [(1, 1, 21, ' ')]},
-    {'him': [(1, 1, 22, ' '), (2, 1, 234, ' ')]},
+    {'him': [(1, 1, 22, ' '), (1,2,40,'.\n')]},
     {'stories': [(1, 1, 23, ' ')]},
-    {'of': [(1, 1, 24, ' '), (2, 1, 102, ' ')]},
+    {'of': [(1, 1, 24, ' '), (1,2,16,' '), (2, 1, 102, ' ')]},
     {'green': [(1, 1, 25, ' ')]},
     {'terraces': [(1, 1, 26, ' ')]},
     {'planted': [(1, 1, 27, ' ')]},
     {'with': [(1, 1, 28, ' '), (1, 1, 36, ' ')]},
-    {'wheat': [(1, 1, 29, ' '), (1, 1, 150, ' ')]},
-    {'the': [(1, 1, 31, ' '), (1, 1, 45, ' '), (1, 2, 16, ' '), (1, 2, 48, ' '), (2, 1, 180, ' '),
+    {'the': [(1, 1, 31, ' '), (1, 1, 45, ' '), (1,2,31,' '), (1,3,8,' '),
              (2, 1, 284, ' '), (2, 1, 298, ' '), (2, 2, 44, ' '), (2, 2, 56, ' '), (2, 2, 70, ' '), (2, 1, 324, ' ')]},
     {'region’s': [(1, 1, 32, ' ')]},
     {'desert': [(1, 1, 33, ' ')]},
-    {'canyons': [(1, 1, 34, ' '), (1, 1, 181, ', ')]},
     {'along': [(1, 1, 35, ' ')]},
     {'thriving': [(1, 1, 37, ' ')]},
     {'apricot': [(1, 1, 38, ' ')]},
     {'orchards': [(1, 1, 39, ' ')]},
-    {'and': [(1, 1, 40, ' '), (1, 2, 1, ' '), (2, 1, 126, ' '), (2, 2, 1, ' '), (2, 1, 211, ' ')]},
+    {'and': [(1, 1, 40, ' '), (1,2,21,' '), (1,2,37,' '), (1,3,28,' '), (2, 1, 211, ' ')]},
     {'fig': [(1, 1, 41, ' ')]},
     {'trees': [(1, 1, 42, ' ')]},
-    {'that': [(1, 1, 43, ' '), (2, 1, 108, ' '), (2, 1, 191, ' ')]},
-    {'fed': [(1, 1, 44, ' '), (2, 1, 196, ' ')]},
+    {'that': [(1, 1, 43, ' '), (1,2,17,' '), (1,2,33,' ')]},
+    {'fed': [(1, 1, 44, ' '), (1,2,34,' ')]},
     {'local': [(1, 1, 46, ' ')]},
-    {'community': [(1, 1, 47, ' '), (2, 1, 16, ' '), (2, 1, 328, ' '), (2, 2, 14, ' ')]},
-    {'now': [(2, 1, 13, ' ')]},
-    {'geologist': [(2, 1, 19, ' ')]},
-    {'at': [(2, 1, 29, ' ')]},
-    {'Al-Hussein': [(2, 1, 32, ' ')]},
-    {'Bin': [(2, 1, 43, ' ')]},
-    {'Talal': [(2, 1, 47, ' ')]},
-    {'University': [(2, 1, 53, ' ')]},
-    {'nearby': [(2, 1, 68, ' ')]},
-    {'Ma’an': [(2, 1, 76, ', ')]},
-    {'little': [(2, 1, 95, ' ')]},
-    {'bounty': [(2, 1, 112, ' ')]},
-    {'remains': [(2, 1, 116, ' ')]},
-    {'Longer': [(2, 1, 120, ' ')]},
-    {'longer': [(2, 1, 129, ' ')]},
-    {'dry': [(2, 1, 136, ' ')]},
-    {'spells': [(2, 1, 140, ' ')]},
-    {'have': [(2, 1, 147, ' ')]},
-    {'made': [(2, 1, 152, ' ')]},
-    {'it': [(2, 1, 157, ' ')]},
-    {'harder': [(2, 1, 160, ' ')]},
-    {'to': [(2, 1, 167, ' '), (2, 1, 343, ' '), (2, 1, 304, ' ')]},
-    {'maintain': [(2, 1, 170, ' ')]},
-    {'fields': [(2, 1, 184, ' ')]},
-    {'generations': [(2, 1, 215, ' ')]},
-    {'before': [(2, 1, 227, ' ')]},
-    {'Since': [(2, 1, 238, ' ')]},
-    {'climate': [(2, 1, 244, ' ')]},
-    {'change': [(2, 1, 252, ' '), (2, 2, 18, ' ')]},
-    {'started': [(2, 1, 260, ' ')]},
-    {'40': [(2, 1, 269, ' ')]},
-    {'years': [(2, 1, 273, ' '), (2, 2, 28, ' ')]},
-    {'ago': [(2, 1, 279, ', ')]},
-    {'fertile': [(2, 1, 288, ' ')]},
-    {'areas': [(2, 1, 296, ' '), (2, 2, 53, ' ')]},
-    {'contract': [(2, 1, 307, ' ')]},
-    {'used': [(2, 1, 339, ' ')]},
-    {'grow': [(2, 1, 347, ' ')]},
-    {'its': [(2, 1, 353, '')]}
+    {'community': [(1, 1, 47, '.\n'), (1,3,17,' '), (2, 1, 328, ' '), (2, 2, 14, ' ')]},
+    {'now': [(1,2,2, ' '), (1,3,29,' ')]},
+    {'geologist': [(1,2,4,' '), (2, 1, 19, ' ')]},
+    {'at': [(1,2,5,' '),(2, 1, 29, ' ')]},
+    {'Al-Hussein': [(1,2,6,' '), (2, 1, 32, ' ')]},
+    {'Bin': [(1,2,7,' '), (2, 1, 43, ' ')]},
+    {'Talal': [(1,2,8, ' '), (2, 1, 47, ' ')]},
+    {'University': [(1,2,9,' '),(2, 1, 53, ' ')]},
+    {'nearby': [(1,2,11,' '), (2, 1, 68, ' ')]},
+    {'Ma’an': [(1,2,12,', '), (2, 1, 76, ', ')]},
+    {'little': [(1,2,15,' '),(2, 1, 95, ' ')]},
+    {'bounty': [(1,2,18,' '), (2, 1, 112, ' ')]},
+    {'remains': [(1,2,19,'. '), (2, 1, 116, ' ')]},
+    {'Longer': [(1,2,20, ' ')]},
+    {'longer': [(1,2,22,' ')]},
+    {'dry': [(1,2,23,' ')]},
+    {'spells': [(1,2,24,' ')]},
+    {'have': [(1,2,25,' ')]},
+    {'made': [(1,2,26,' ')]},
+    {'it': [(1,2,27,' ')]},
+    {'harder': [(1,2,28,' ')]},
+    {'to': [(1,2,29,' '), (1,3,12,' '), (1,3,19,' '), (2, 1, 304, ' ')]},
+    {'maintain': [(1,2,30,' ')]},
+    {'fields': [(1,2,32,' ')]},
+    {'generations': [(1,2,38,' ')]},
+    {'before': [(1,2,39,' ')]},
+    {'"Since': [(1, 3, 1, ' ')]},
+    {'climate': [(1, 3, 2, ' ')]},
+    {'change': [(1,3,3,' '), (2, 2, 18, ' ')]},
+    {'started': [(1,3,4,' '),(1,3,11,' ')]},
+    {'40': [(1,3,5,' ')]},
+    {'years': [(1,3,6,' '), (2, 2, 28, ' ')]},
+    {'ago': [(1,3,7,', ')]},
+    {'fertile': [(1,3,9,' ')]},
+    {'areas': [(1,3,10,' '), (2, 2, 53, ' ')]},
+    {'contract': [(1,3,13,',” ')]},
+    {'used': [(1,3,18,' ')]},
+    {'grow': [(1,3,20,' ')]},
+    {'its': [(1,3,21,' '),(1,3,25,' ')]},
+    {'"The': [(1,3,16,' ')]},
+    {'own': [(1,3,22,' '),(1,3,26,' ')]},
+    {'food': [(1,3,23,' ')]},
+    {'on': [(1,3,24,' ')]},
+    {'land': [(1,3,27,', ')]},
+    {'they': [(1,3,30,' ')]},
+    {'import': [(1,3,31,' ')]},
+    {'nearly': [(1,3,32,' ')]},
+    {'everything': [(1,3,33,' ')]},
+    {'from': [(1,3,34,' ')]},
+    {'outside': [(1,3,35,'." ')]}
 ]
+
+
 
 
 def convert_to_tuple(string_tuple, type_cast):
@@ -122,15 +133,15 @@ sw = SearchWizard()
 
 tb = TextBuilder()
 
-## Tests on Authors table
+## Tests on Reporters table
 ##
-author_id = tl.load_author('Yuval Levy')
-cursor.execute(" SELECT * FROM art_info.authors ")
-print("Authors table: ")
+reporter_id = tl.load_reporter('Yuval Levy')
+cursor.execute(" SELECT * FROM art_info.reporters ")
+print("Reporters table: ")
 for row in cursor:
     print(row)
 ##
-## End of tests on Authors table
+## End of tests on Reporters table
 
 ## Tests on Magazines table
 ##
@@ -147,8 +158,8 @@ cursor.close()
 ## Tests on Articles table
 ##
 cursor = connection.cursor()
-art_id1 = tl.load_article(np_id1, 'The Big Bang Theory', datetime(1987, 5, 30).date(), author_id)
-art_id2 = tl.load_article(np_id2, 'friends', datetime(1987, 5, 30).date(), author_id)
+art_id1 = tl.load_article(np_id1, 'The Big Bang Theory', datetime(1987, 5, 30).date(), reporter_id)
+art_id2 = tl.load_article(np_id2, 'friends', datetime(1987, 5, 30).date(), reporter_id)
 cursor.execute("SELECT * FROM art_info.Articles ORDER BY article_id ")
 print("Articles table: ")
 
@@ -161,27 +172,7 @@ cursor.close()
 ##
 
 cursor = connection.cursor()
-#
-# 2. Mohamad Alfarajat says his father told him stories of green terraces planted with wheat in the region’s desert canyons, along with thriving apricot orchards and fig trees that fed the local community.
-# Alfarajat, now a geologist at Al-Hussein Bin Talal University in nearby Ma’an, Jordan, says little of that bounty remains. Longer and longer dry spells have made it harder to maintain the fields that fed his father and generations before him.
-# “Since climate change started 40 years ago, the fertile areas started to contract, ”Alfarajat says. “The community used to grow its own food on its own land, and now they import nearly everything from outside.”
-#
-#   (2,3,13,'," ')
-#   (2,3,13,',', ' ')
-#
-# As drought has made local agriculture precarious, climate change has also made flash flooding more frequent, threatening both the area’s ancient ruins and local communities. And more intense temperature swings have accelerated the weathering of historic sandstone facades that were carved at the height of the Roman Empire.
-# “The impact of climate change at Wadi Musa is very clear,” says Alfarajat. “If you want to see climate change impacts in front of your face, come to Petra.”
-# Wadi Musa has changed in other ways since Alfarajat was a boy. Since the 1980s, the nearby archaeological site of Petra has turned into a global tourism hotspot. Nearly a million visitors visit Petra each year to marvel at the tombs and temples cut into sandstone by the Nabatean civilization almost 2,000 years ago. They, too, are threatened by flash floods, and damage to the archaeological site would endanger the tourism business locals have come to rely on.
-# To protect the site in decades to come, Petra’s guardians are turning to ancient solutions, including technology left behind by the people who originally built the remarkable desert outpost.
-#
 
-
-# word_occurrence = [
-#     ('When', [(1, 1, 1, ' ')]), ('he', [(1, 1, 2, ' ')]),
-#     ('a', [(1, 1, 3, ' '), (1, 1, 9, ' ')]),
-#     ('growing', [(1, 1, 4, ' ')]), ('up', [(1, 1, 5, ' ')]), ('in', [(1, 1, 6, ' '), (1, 1, 12, ' ')]),
-#     ('Wadi', [(1, 1, 7, ' ')]), ('Musa', [(1, 1, 8, ' ')]), ('town', [(1, 1, 10, ' ')]),
-#     ('southern', [(1, 1, 13, ' ')]), ('Jordan', [(1, 1, 14, ',')])]
 word_occurrence1 = []
 word_occurrence3 = [{'Dog': [(1, 2, 3, ' '), (1, 3, 5, '?')]}]
 
@@ -213,7 +204,7 @@ def extract_first_elements(tup_list):
     return [t[0] for t in tup_list]
 
 
-article_list_test = sw.search_author_articles('yuval levy')
+article_list_test = sw.search_reporter_articles('yuval levy')
 print("All article written Yuval Levy are: ")
 print(article_list_test)
 
@@ -237,12 +228,16 @@ print(extract_first_elements(all_words))
 all_words_in_article = tb.all_words_in_article(art_id1[0])
 print("All words in article 1 are: ")
 print(extract_first_elements(all_words_in_article))
+
+test_article = tb.build_entire_text('The Big Bang Theory')
+# print("All words in article 1 are: ")
+# print(extract_first_elements(all_words_in_article))
 ## End of tests on SearchWizard
 
 
 cursor.close()
 ##
-## End of tests on Authors table
+## End of tests on Reporters table
 cursor = connection.cursor()
 
 cursor.execute(" DROP TABLE art_info.Articles")
@@ -250,8 +245,8 @@ connection.commit()
 connection.commit()
 cursor.execute(" DROP TABLE art_info.newspapers")
 connection.commit()
-cursor.execute(" TRUNCATE TABLE art_info.authors")
-cursor.execute(" DROP TABLE art_info.authors")
+cursor.execute(" TRUNCATE TABLE art_info.reporters")
+cursor.execute(" DROP TABLE art_info.reporters")
 # connection.commit()
 # cursor.execute(" TRUNCATE TABLE text_handle.special_words")
 # cursor.execute(" DROP TABLE text_handle.special_words")
