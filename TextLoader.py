@@ -20,12 +20,22 @@ def parse_name(full_name):
 
     return first_name, last_name
 
+
 def convert_dicts_to_tuples(array_of_dicts):
     res = []
     for d in array_of_dicts:
         for key, value in d.items():
             res.append((key, value))
     return res
+
+
+def replace_quotes(word_occurrence):
+    for i, occurrence in enumerate(word_occurrence):
+        if '"' in occurrence[3]:
+            temp_str = occurrence[3].replace(r'"', '@@')
+            new_occ = occurrence[:3] + (temp_str,)
+            word_occurrence[i] = new_occ
+
 
 class TextLoader:
     def __init__(self):
@@ -66,15 +76,17 @@ class TextLoader:
         self.db_handler.connection.commit()
         article_id = self.db_handler.cursor.fetchall()
         return article_id
+
     #
     def load_text(self, article_id, disct_text):
         dis_text = convert_dicts_to_tuples(disct_text)
         print("complete list: ", dis_text)
         for word_occurrences in dis_text:
-            self.db_handler.cursor.execute("SELECT word_id FROM text_handle.words WHERE word = %s", (word_occurrences[0],))
+            self.db_handler.cursor.execute("SELECT word_id FROM text_handle.words WHERE word = %s",
+                                           (word_occurrences[0],))
             self.db_handler.connection.commit()
             word_id = self.db_handler.cursor.fetchall()
-            print("word occurrence is: : ", word_occurrences[1])
+            replace_quotes(word_occurrences[1])
             # If the word is not in the database, we add it.
             if len(word_id) == 0:
                 self.db_handler.cursor.execute(" INSERT INTO text_handle.words (word, occurrences) VALUES ( "
