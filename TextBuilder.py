@@ -17,17 +17,10 @@ def parse_string_to_tuple(word, input_string):
     parsed_tuple = ast.literal_eval(tuple_strings)
     array_of_tuples = list(parsed_tuple[1])
     for tup in array_of_tuples:
-        if '@@@@@' in tup[3]:
-            temp_str = tup[3].replace(r'@@@@@', '"\n')
-            final_word = word + temp_str
-        elif '@@@' in tup[3]:
-            temp_str = tup[3].replace(r'@@@', '\n')
-            final_word = word + temp_str
-        elif '@@' in tup[3]:
-            temp_str = tup[3].replace(r'@@', '"')
-            final_word = word + temp_str
-        else:
-            final_word = word + tup[3]
+        temp_str = tup[3].replace(r'@@@@@@', '\n\n')\
+                         .replace(r'@@@', '\n')\
+                         .replace(r'&&&', '"')
+        final_word = word + temp_str
         new_tup = tup[:3] + (final_word,)
         res.append(new_tup)
     return res
