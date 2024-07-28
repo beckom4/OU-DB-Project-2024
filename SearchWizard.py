@@ -33,17 +33,17 @@ class SearchWizard:
     ## The following cluster of functions is supposed to take care of requirement number 3
     #  in the project's requirements. The cluster ends in the next ##
 
-    # Search for all the articles written by an author whose name was provided by the user.
-    # The loop takes care of the case where there can be multiple authors with the same name.
+    # Search for all the articles written by an reporter whose name was provided by the user.
+    # The loop takes care of the case where there can be multiple reporters with the same name.
     # In that case, we fetch the articles that were written by all of them.
-    def search_author_articles(self, author_full_name):
-        author_ids = self.db_handler.get_author_id_from_name(author_full_name)
-        for author_id_tuple in author_ids:
-            author_id = author_id_tuple[0]
+    def search_reporter_articles(self, reporter_full_name):
+        reporter_ids = self.db_handler.get_reporter_id_from_name(reporter_full_name)
+        for reporter_id_tuple in reporter_ids:
+            reporter_id = reporter_id_tuple[0]
             self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name "
                                            " FROM art_info.articles a JOIN art_info.newspapers n "
                                             " ON a.np_id = n.np_id "
-                                           " WHERE a.author_id = %s ", (author_id,))
+                                           " WHERE a.reporter_id = %s ", (reporter_id,))
             self.db_handler.connection.commit()
         return self.db_handler.cursor.fetchall()
 
