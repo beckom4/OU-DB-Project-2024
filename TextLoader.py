@@ -31,19 +31,19 @@ class TextLoader:
     def __init__(self):
         self.db_handler = DB_handler()
 
-    def load_author(self, author_full_name):
-        author_id = self.db_handler.get_author_id_from_name(author_full_name)
-        # If the author is not in the database, we add him.
-        if len(author_id) == 0:
-            first_name = parse_name(author_full_name)[0]
-            last_name = parse_name(author_full_name)[1]
-            self.db_handler.cursor.execute(" INSERT INTO art_info.authors (first_name, last_name) "
-                                           " VALUES (%s, %s) RETURNING author_id", (first_name, last_name))
+    def load_reporter(self, reporter_full_name):
+        reporter_id = self.db_handler.get_reporter_id_from_name(reporter_full_name)
+        # If the reporter is not in the database, we add him.
+        if len(reporter_id) == 0:
+            first_name = parse_name(reporter_full_name)[0]
+            last_name = parse_name(reporter_full_name)[1]
+            self.db_handler.cursor.execute(" INSERT INTO art_info.reporters (first_name, last_name) "
+                                           " VALUES (%s, %s) RETURNING reporter_id", (first_name, last_name))
             self.db_handler.connection.commit()
             ret = self.db_handler.cursor.fetchall()[0][0]
-        # If the author is in the database, we return the author_id.
+        # If the reporter is in the database, we return the reporter_id.
         else:
-            ret = author_id[0][0]
+            ret = reporter_id[0][0]
         return ret
 
     def load_newspaper(self, np_name):
@@ -58,11 +58,11 @@ class TextLoader:
             ret = np_id[0][0]
         return ret
 
-    def load_article(self, np_id, article_title, date, author_id):
-        self.db_handler.cursor.execute(" INSERT INTO art_info.articles (np_id, article_title, date, author_id) "
+    def load_article(self, np_id, article_title, date, reporter_id):
+        self.db_handler.cursor.execute(" INSERT INTO art_info.articles (np_id, article_title, date, reporter_id) "
                                        " VALUES (%s, %s, %s, %s) "
                                        " RETURNING article_id",
-                                       (np_id, article_title, date, author_id))
+                                       (np_id, article_title, date, reporter_id))
         self.db_handler.connection.commit()
         article_id = self.db_handler.cursor.fetchall()
         return article_id
@@ -74,6 +74,7 @@ class TextLoader:
             self.db_handler.cursor.execute("SELECT word_id FROM text_handle.words WHERE word = %s", (word_occurrences[0],))
             self.db_handler.connection.commit()
             word_id = self.db_handler.cursor.fetchall()
+            print("word occurrence is: : ", word_occurrences[1])
             # If the word is not in the database, we add it.
             if len(word_id) == 0:
                 self.db_handler.cursor.execute(" INSERT INTO text_handle.words (word, occurrences) VALUES ( "
