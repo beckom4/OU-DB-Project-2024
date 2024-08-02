@@ -60,9 +60,9 @@ class DB_handler:
         self.cursor.execute(""" CREATE TABLE text_handle.words ( word_id SERIAL PRIMARY KEY, 
                                 word TEXT, occurrences occurrence_type[]); """)
         self.connection.commit()
-        # self.cursor.execute(" CREATE TABLE text_handle.special_words(group_id SERIAL PRIMARY KEY, "
-        #                     " group_description TEXT, words TEXT[])")
-        # self.connection.commit()
+        self.cursor.execute(""" CREATE TABLE text_handle.word_groups(group_id SERIAL PRIMARY KEY, 
+                             group_description TEXT, word_ids INTEGER[]); """)
+        self.connection.commit()
         # self.cursor.execute(" CREATE TABLE text_handle.phrases(phrase_id SERIAL PRIMARY KEY, phrase TEXT )")
         # self.connection.commit()
 
