@@ -1,7 +1,15 @@
 from DB_handler import DB_handler
-from LinkedList import *
 import re
 import ast
+
+def parse_string_to_tuple_ind(input_string):
+    res = []
+    tuple_strings = (input_string
+                                    .replace(r'"', '') \
+                                    .replace("\\",''))
+    tup_arr = ast.literal_eval(tuple_strings.replace('{{', '[').replace('}}', ']'))
+    return tup_arr
+
 
 def parse_string_to_tuple_con(word, input_string):
     res = []
@@ -42,8 +50,6 @@ def parse_string_to_tuple(word, input_string):
 class TextBuilder:
     def __init__(self):
         self.db_handler = DB_handler()
-        self.node = Node()
-        self.ll = LinkedList()
 
     def build_entire_text(self, article_title):
         text_arr = []
@@ -133,6 +139,40 @@ class TextBuilder:
                 final_context += f"{tup[3]}"
             res.append(final_context)
         return res
+
+
+    # Search for all the articles that contain a specific word.
+    # An index is defined as the position of the word in the article.
+    # The position consists of the paragraph number, the line number and the position in the line.
+    def build_words_index(self, word, article_title):
+        word_id = self.db_handler.get_word_id_from_word(word)[0][0]
+        article_id = self.db_handler.get_article_id_from_title(article_title)[0][0]
+        query = """
+            WITH position_aggregation AS (
+                SELECT word,
+                       occ.article_id,
+                       ARRAY_AGG((pos.paragraph_number, pos.line_number, pos.position_in_line)) AS positions
+                FROM words,
+                     LATERAL unnest(occurrences) AS occ(article_id, positions),
+                     LATERAL unnest(occ.positions) AS pos(paragraph_number, line_number, position_in_line, finishing_chars)
+                GROUP BY word, occ.article_id
+            )
+            SELECT word,
+                   ARRAY_AGG( positions) AS filtered_occurrences
+            FROM position_aggregation
+            GROUP BY word;
+        """
+        self.db_handler.cursor.execute(query)
+        self.db_handler.connection.commit()
+        res = []
+        for row in self.db_handler.cursor:
+            index_arr = parse_string_to_tuple_ind(row[1])
+            res.append((row[0], index_arr))
+        return res
+
+
+
+
 
 
 
