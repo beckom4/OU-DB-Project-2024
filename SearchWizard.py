@@ -3,25 +3,25 @@
 #              to key elements provided by the user                                                        #
 #              The functions in this class implement the 3rd requirement of the assignment        #
 ############################################################################################################
+import ast
 
 from DB_handler import DB_handler
-import uuid
-import ast
-import re
 
 
-def parse_nested_article_id(s):
-    s = s.strip('()')
-    main_parts = s.split(',', 3)
-    uuid_str = main_parts[0]
-    first_int = int(main_parts[1])
-    second_int = int(main_parts[2])
-    array_of_tuples_str = main_parts[3].strip('"{}')
-    tuple_pattern = r'\(\d+,\d+,\d+\)'
-    tuples = re.findall(tuple_pattern, array_of_tuples_str)
-    parsed_tuples = [ast.literal_eval(t) for t in tuples]
-    return (uuid_str, first_int, second_int, parsed_tuples)
+def parse_tuples_string(string_representation):
+    # Remove outer curly braces and split the string into individual tuple strings
+    string_representation = string_representation.strip('{}')
+    tuple_strings = string_representation.split('","')
 
+    # Clean up each tuple string
+    tuples_list = []
+    for tuple_str in tuple_strings:
+        cleaned_tuple_str = tuple_str.strip('"').strip('()')
+        tuple_elements = cleaned_tuple_str.split(',')
+        tuple_int = tuple(map(int, tuple_elements))
+        tuples_list.append(tuple_int)
+
+    return tuples_list
 
 
 class SearchWizard:
@@ -42,7 +42,7 @@ class SearchWizard:
             reporter_id = reporter_id_tuple[0]
             self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name "
                                            " FROM art_info.articles a JOIN art_info.newspapers n "
-                                            " ON a.np_id = n.np_id "
+                                           " ON a.np_id = n.np_id "
                                            " WHERE a.reporter_id = %s ", (reporter_id,))
             self.db_handler.connection.commit()
         return self.db_handler.cursor.fetchall()
@@ -59,8 +59,8 @@ class SearchWizard:
     # Search for all the articles that were published a specific date
     def search_articles_date(self, date):
         self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name "
-                                        " FROM art_info.articles a JOIN art_info.newspapers n "
-                                        " ON a.np_id = n.np_id "
+                                       " FROM art_info.articles a JOIN art_info.newspapers n "
+                                       " ON a.np_id = n.np_id "
                                        " WHERE a.date = %s", (date,))
         self.db_handler.connection.commit()
         return self.db_handler.cursor.fetchall()
@@ -68,13 +68,13 @@ class SearchWizard:
     # Search for all the articles that contain a specific word.
     def search_articles_word(self, word):
         word_id = self.db_handler.get_word_id_from_word(word)[0][0]
-        self.db_handler.cursor.execute( " SELECT a.article_title, n.np_name "
-                                        " FROM art_info.articles a JOIN art_info.newspapers n "
-                                        " ON a.np_id = n.np_id "
-                                        " WHERE a.article_id IN"
-                                            " (SELECT (unnest(occurrences)).article_id AS article_id "
-                                            " FROM text_handle.words "
-                                            " WHERE word_id = %s)", (word_id,))
+        self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name "
+                                       " FROM art_info.articles a JOIN art_info.newspapers n "
+                                       " ON a.np_id = n.np_id "
+                                       " WHERE a.article_id IN"
+                                       " (SELECT (unnest(occurrences)).article_id AS article_id "
+                                       " FROM text_handle.words "
+                                       " WHERE word_id = %s)", (word_id,))
         self.db_handler.connection.commit()
         return self.db_handler.cursor.fetchall()
 
@@ -84,6 +84,29 @@ class SearchWizard:
                                        " WHERE article_title = %s ", (title,))
         self.db_handler.connection.commit()
         return self.db_handler.cursor.fetchall()
+
+    def search_word_at_position(self, article_title, paragraph_number, line_number, position_in_line):
+        article_id = self.db_handler.get_article_id_from_title(article_title)[0][0]
+        query = """
+            SELECT word
+            FROM words,
+                 LATERAL unnest(occurrences) AS occ(article_id, positions),
+                 LATERAL unnest(occ.positions) AS pos(paragraph_number, line_number, position_in_line, finishing_chars)
+            WHERE occ.article_id = %s
+              AND pos.paragraph_number = %s
+              AND pos.line_number = %s
+              AND pos.position_in_line = %s;
+        """
+        self.db_handler.cursor.execute(query, (article_id, paragraph_number, line_number, position_in_line))
+        self.db_handler.connection.commit()
+        res = self.db_handler.cursor.fetchone()
+        if res:
+            return res[0]
+        else:
+            return None
+
+
+
 
     ## End of the cluster of functions for requirement number 3
 
