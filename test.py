@@ -10,6 +10,18 @@ from TextLoader import TextLoader
 
 from TextBuilder import TextBuilder
 
+
+def merge_dict_array(dict_array):
+    merged_dict = {}
+    for d in dict_array:
+        for key, value in d.items():
+            if key in merged_dict:
+                merged_dict[key].extend(value)
+            else:
+                merged_dict[key] = value
+    return merged_dict
+
+
 dict_array = [
     {'When': [(1, 1, 1, ' ')]},
     {'he': [(1, 1, 2, ' ')]},
@@ -18,21 +30,21 @@ dict_array = [
     {'boy': [(1, 1, 5, ' ')]},
     {'growing': [(1, 1, 6, ' ')]},
     {'up': [(1, 1, 7, ' ')]},
-    {'in': [(1, 1, 8, ' '), (1, 1, 13, ' '), (1, 1, 30, ' '), (1, 2, 11, ' '), (1,5,22,' ')]},
-    {'Wadi': [(1, 1, 9, ' '),(1,5,7,' ')]},
-    {'Musa': [(1, 1, 10, ', '),(1,5,8,' ')]},
+    {'in': [(1, 1, 8, ' '), (1, 1, 13, ' '), (1, 1, 30, ' '), (1, 2, 11, ' '), (1, 5, 22, ' ')]},
+    {'Wadi': [(1, 1, 9, ' '), (1, 5, 7, ' ')]},
+    {'Musa': [(1, 1, 10, ', '), (1, 5, 8, ' ')]},
     {'town': [(1, 1, 12, ' ')]},
     {'southern': [(1, 1, 14, ' ')]},
     {'Jordan': [(1, 1, 15, ' '), (1, 2, 13, ', '), (2, 1, 83, ' ')]},
     {'Mohamad': [(1, 1, 16, ' ')]},
-    {'Alfarajat': [(1, 1, 17, ' '), (1, 2, 1, ', '), (1, 3, 14, ' '), (1,5,13,'. "')]},
-    {'says': [(1, 1, 18, ' '), (1, 2, 14, ' '), (1, 3, 15, '. "'), (1,5,12,' ')]},
+    {'Alfarajat': [(1, 1, 17, ' '), (1, 2, 1, ', '), (1, 3, 14, ' '), (1, 5, 13, '. "')]},
+    {'says': [(1, 1, 18, ' '), (1, 2, 14, ' '), (1, 3, 15, '. "'), (1, 5, 12, ' ')]},
     {'his': [(1, 1, 19, ' '), (1, 2, 35, ' '), (2, 1, 200, ' ')]},
     {'father': [(1, 1, 20, ' '), (1, 2, 36, ' ')]},
     {'told': [(1, 1, 21, ' ')]},
     {'him': [(1, 1, 22, ' '), (1, 2, 40, '.\n')]},
     {'stories': [(1, 1, 23, ' ')]},
-    {'of': [(1, 1, 24, ' '), (1, 2, 16, ' '), (1, 4, 35, ' '), (1, 4, 45, ' '), (1,5,3,' '), (1,5,24,' ')]},
+    {'of': [(1, 1, 24, ' '), (1, 2, 16, ' '), (1, 4, 35, ' '), (1, 4, 45, ' '), (1, 5, 3, ' '), (1, 5, 24, ' ')]},
     {'green': [(1, 1, 25, ' ')]},
     {'terraces': [(1, 1, 26, ' ')]},
     {'planted': [(1, 1, 27, ' ')]},
@@ -54,7 +66,7 @@ dict_array = [
     {'community': [(1, 1, 47, '.\n'), (1, 3, 17, ' '), (2, 1, 328, ' '), (2, 2, 14, ' ')]},
     {'now': [(1, 2, 2, ' '), (1, 3, 29, ' ')]},
     {'geologist': [(1, 2, 4, ' '), (2, 1, 19, ' ')]},
-    {'at': [(1, 2, 5, ' '), (1, 4, 42, ' '),(1,5,6,' ')]},
+    {'at': [(1, 2, 5, ' '), (1, 4, 42, ' '), (1, 5, 6, ' ')]},
     {'Al-Hussein': [(1, 2, 6, ' '), (2, 1, 32, ' ')]},
     {'Bin': [(1, 2, 7, ' '), (2, 1, 43, ' ')]},
     {'Talal': [(1, 2, 8, ' '), (2, 1, 47, ' ')]},
@@ -72,14 +84,14 @@ dict_array = [
     {'made': [(1, 2, 26, ' '), (1, 4, 4, ' '), (1, 4, 12, ' ')]},
     {'it': [(1, 2, 27, ' ')]},
     {'harder': [(1, 2, 28, ' ')]},
-    {'to': [(1, 2, 29, ' '), (1, 3, 12, ' '), (1, 3, 19, ' '), (1,5,17,' '),(1,5,28,' ')]},
+    {'to': [(1, 2, 29, ' '), (1, 3, 12, ' '), (1, 3, 19, ' '), (1, 5, 17, ' '), (1, 5, 28, ' ')]},
     {'maintain': [(1, 2, 30, ' ')]},
     {'fields': [(1, 2, 32, ' ')]},
     {'generations': [(1, 2, 38, ' ')]},
     {'before': [(1, 2, 39, ' ')]},
     {'"Since': [(1, 3, 1, ' ')]},
-    {'climate': [(1, 3, 2, ' '), (1, 4, 8, ' '),(1,5,19,' '),(1,5,4,' ')]},
-    {'change': [(1, 3, 3, ' '), (1, 4, 9, ' '),(1,5,5,' '),(1,5,20,' ')]},
+    {'climate': [(1, 3, 2, ' '), (1, 4, 8, ' '), (1, 5, 19, ' '), (1, 5, 4, ' ')]},
+    {'change': [(1, 3, 3, ' '), (1, 4, 9, ' '), (1, 5, 5, ' '), (1, 5, 20, ' ')]},
     {'started': [(1, 3, 4, ' '), (1, 3, 11, ' ')]},
     {'40': [(1, 3, 5, ' ')]},
     {'years': [(1, 3, 6, ' '), (2, 2, 28, ' ')]},
@@ -90,7 +102,7 @@ dict_array = [
     {'used': [(1, 3, 18, ' ')]},
     {'grow': [(1, 3, 20, ' ')]},
     {'its': [(1, 3, 21, ' '), (1, 3, 25, ' ')]},
-    {'The': [(1, 3, 16, ' '),(1,5,1,' ')]},
+    {'The': [(1, 3, 16, ' '), (1, 5, 1, ' ')]},
     {'own': [(1, 3, 22, ' '), (1, 3, 26, ' ')]},
     {'food': [(1, 3, 23, ' ')]},
     {'on': [(1, 3, 24, ' ')]},
@@ -131,24 +143,23 @@ dict_array = [
     {'height': [(1, 4, 44, ' ')]},
     {'Roman': [(1, 4, 47, ' ')]},
     {'Empire': [(1, 4, 48, '.\n')]},
-    {'impact': [(1,5,2,' ')]},
-    {'is': [(1,5,9,' ')]},
-    {'very': [(1,5,10,' ')]},
-    {'clear': [(1,5,11,'," ')]},
-    {'If': [(1,5,14,' ')]},
-    {'you': [(1,5,15,' ')]},
-    {'want': [(1,5,16,' ')]},
-    {'see': [(1,5,18,' ')]},
-    {'impacts': [(1,5,21,' ')]},
-    {'front': [(1,5,23,' ')]},
-    {'your': [(1,5,25,' ')]},
-    {'face': [(1,5,26,', ')]},
-    {'come': [(1,5,27,' ')]},
-    {'Petra': [(1,5,29,'."\n\n')]}
+    {'impact': [(1, 5, 2, ' ')]},
+    {'is': [(1, 5, 9, ' ')]},
+    {'very': [(1, 5, 10, ' ')]},
+    {'clear': [(1, 5, 11, '," ')]},
+    {'If': [(1, 5, 14, ' ')]},
+    {'you': [(1, 5, 15, ' ')]},
+    {'want': [(1, 5, 16, ' ')]},
+    {'see': [(1, 5, 18, ' ')]},
+    {'impacts': [(1, 5, 21, ' ')]},
+    {'front': [(1, 5, 23, ' ')]},
+    {'your': [(1, 5, 25, ' ')]},
+    {'face': [(1, 5, 26, ', ')]},
+    {'come': [(1, 5, 27, ' ')]},
+    {'Petra': [(1, 5, 29, '."\n\n')]}
 ]
 
-
-
+converted_dict = merge_dict_array(dict_array)
 
 def convert_to_tuple(string_tuple, type_cast):
     # Remove the parentheses and split by commas
@@ -220,7 +231,7 @@ cursor = connection.cursor()
 word_occurrence1 = []
 word_occurrence3 = [{'Dog': [(1, 2, 3, ' '), (1, 3, 5, '?')]}]
 
-tl.load_text(art_id1, dict_array)
+tl.load_text(art_id1, converted_dict)
 # tl.load_text(art_id2, word_occurrence1)
 # tl.load_text(art_id2, word_occurrence3)
 
@@ -265,22 +276,33 @@ print(article_list_test)
 # print(articles_word_test)
 #
 # #
-all_words = tb.all_words()
-print("All words in the database are: ")
-print(extract_first_elements(all_words))
+# all_words = tb.all_words()
+# print("All words in the database are: ")
+# print(extract_first_elements(all_words))
 
-all_words_in_article = tb.all_words_in_article(art_id1[0])
-print("All words in article 1 are: ")
-print(extract_first_elements(all_words_in_article))
-
-test_article = tb.build_entire_text('The Big Bang Theory')
-context_arr = tb.build_context('The Big Bang Theory', 'Wadi')
-print("context_arr: ")
-for context in context_arr:
-    print("The context is: ")
-    print(context)
+# all_words_in_article = tb.all_words_in_article(art_id1[0])
 # print("All words in article 1 are: ")
 # print(extract_first_elements(all_words_in_article))
+
+test_article = tb.build_entire_text('The Big Bang Theory')
+# print("All words in article 1 are: ")
+# print(extract_first_elements(all_words_in_article))
+
+# context_arr = tb.build_context('The Big Bang Theory', 'Wadi')
+# print("context_arr: ")
+# for context in context_arr:
+#     print("The context is: ")
+#     print(context)
+
+# indexes = tb.build_words_index('Alfarajat', 'The Big Bang Theory')
+# print("The indexes are: ")
+# print(indexes)
+
+
+# word_at_position = sw.search_word_at_position('The Big Bang Theory', 4, 5, 12)
+# print("The word at position is: ")
+# print(word_at_position)
+
 ## End of tests on SearchWizard
 
 
@@ -296,10 +318,9 @@ cursor.execute(" DROP TABLE art_info.newspapers")
 connection.commit()
 cursor.execute(" TRUNCATE TABLE art_info.reporters")
 cursor.execute(" DROP TABLE art_info.reporters")
-# connection.commit()
-# cursor.execute(" TRUNCATE TABLE text_handle.special_words")
-# cursor.execute(" DROP TABLE text_handle.special_words")
-# connection.commit()
+connection.commit()
+cursor.execute(" DROP TABLE text_handle.word_groups ")
+connection.commit()
 cursor.execute(" DROP TABLE text_handle.words")
 connection.commit()
 # cursor.execute(" DROP TABLE text_handle.phrases")
