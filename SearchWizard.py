@@ -37,24 +37,30 @@ class SearchWizard:
     # The loop takes care of the case where there can be multiple reporters with the same name.
     # In that case, we fetch the articles that were written by all of them.
     def search_reporter_articles(self, reporter_full_name):
-        reporter_ids = self.db_handler.get_reporter_id_from_name(reporter_full_name)
-        for reporter_id_tuple in reporter_ids:
-            reporter_id = reporter_id_tuple[0]
-            self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name "
-                                           " FROM art_info.articles a JOIN art_info.newspapers n "
-                                           " ON a.np_id = n.np_id "
-                                           " WHERE a.reporter_id = %s ", (reporter_id,))
-            self.db_handler.connection.commit()
-        return self.db_handler.cursor.fetchall()
+        if len(reporter_full_name) == 0:
+            return None
+        else:
+            reporter_ids = self.db_handler.get_reporter_id_from_name(reporter_full_name)
+            for reporter_id_tuple in reporter_ids:
+                reporter_id = reporter_id_tuple[0]
+                self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name, a.date "
+                                               " FROM art_info.articles a JOIN art_info.newspapers n "
+                                               " ON a.np_id = n.np_id "
+                                               " WHERE a.reporter_id = %s ", (reporter_id,))
+                self.db_handler.connection.commit()
+            return self.db_handler.cursor.fetchall()
 
     # Search for all the articles in a specific newspaper.
     # The assumption is that there are no 2 magazines with the same name.
     def search_np_articles(self, np_name):
-        np_id = self.db_handler.get_np_id_from_name(np_name)[0][0]
-        self.db_handler.cursor.execute(" SELECT article_title "
-                                       " FROM art_info.articles WHERE np_id = %s", (np_id,))
-        self.db_handler.connection.commit()
-        return self.db_handler.cursor.fetchall()
+        if len(np_name) == 0:
+            return None
+        else:
+            np_id = self.db_handler.get_np_id_from_name(np_name)[0][0]
+            self.db_handler.cursor.execute(" SELECT article_title, date "
+                                           " FROM art_info.articles WHERE np_id = %s", (np_id,))
+            self.db_handler.connection.commit()
+            return self.db_handler.cursor.fetchall()
 
     # Search for all the articles that were published a specific date
     def search_articles_date(self, date):
@@ -67,23 +73,19 @@ class SearchWizard:
 
     # Search for all the articles that contain a specific word.
     def search_articles_word(self, word):
-        word_id = self.db_handler.get_word_id_from_word(word)[0][0]
-        self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name "
-                                       " FROM art_info.articles a JOIN art_info.newspapers n "
-                                       " ON a.np_id = n.np_id "
-                                       " WHERE a.article_id IN"
-                                       " (SELECT (unnest(occurrences)).article_id AS article_id "
-                                       " FROM text_handle.words "
-                                       " WHERE word_id = %s)", (word_id,))
-        self.db_handler.connection.commit()
-        return self.db_handler.cursor.fetchall()
-
-    def search_article_title(self, title):
-        self.db_handler.cursor.execute(" SELECT magazine_id, volume_id, article_id "
-                                       " FROM art_info.articles "
-                                       " WHERE article_title = %s ", (title,))
-        self.db_handler.connection.commit()
-        return self.db_handler.cursor.fetchall()
+        if len(word) == 0:
+            return None
+        else:
+            word_id = self.db_handler.get_word_id_from_word(word)
+            self.db_handler.cursor.execute(" SELECT a.article_title, n.np_name, a.date "
+                                           " FROM art_info.articles a JOIN art_info.newspapers n "
+                                           " ON a.np_id = n.np_id "
+                                           " WHERE a.article_id IN"
+                                           " (SELECT (unnest(occurrences)).article_id AS article_id "
+                                           " FROM text_handle.words "
+                                           " WHERE word_id = %s)", (word_id,))
+            self.db_handler.connection.commit()
+            return self.db_handler.cursor.fetchall()
 
     def search_word_at_position(self, article_title, paragraph_number, line_number, position_in_line):
         article_id = self.db_handler.get_article_id_from_title(article_title)[0][0]
