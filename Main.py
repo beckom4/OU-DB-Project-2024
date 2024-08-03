@@ -10,9 +10,9 @@ class Main:
         self.database.create_schemas()
         self.database.create_types()
         self.database.create_tables()
+        self.database.create_triggers()
 
     def run(self):
-        # db_test.create_triggers()
         self.ui.run()
 
 
