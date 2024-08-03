@@ -30,14 +30,24 @@ class DB_handler:
         self.connection.commit()
 
     def create_types(self):
+        # self.cursor.execute("""
+        #     CREATE TYPE text_handle.position_type AS (paragraph_number INTEGER, line_number INTEGER,
+        #     position_in_line INTEGER, finishing_chars varchar(10));
+        #     CREATE TYPE text_handle.occurrence_type AS ( article_id INTEGER, positions position_type[] );
+        # """)
         self.cursor.execute("""
-            CREATE TYPE position_type AS (paragraph_number INTEGER, line_number INTEGER, position_in_line INTEGER, 
-                                        finishing_chars varchar(10));
-            CREATE TYPE occurrence_type AS (
-                article_id INTEGER,
-                positions position_type[]
-            );
-        """)
+                        DO $$ BEGIN
+                            CREATE TYPE position_type AS ( paragraph_number INTEGER, line_number INTEGER, 
+                            position_in_line INTEGER, finishing_chars varchar(10));
+                        EXCEPTION
+                            WHEN duplicate_object THEN null;
+                        END $$;
+                        DO $$ BEGIN
+                            CREATE TYPE occurrence_type AS ( article_id INTEGER, positions position_type[] );
+                        EXCEPTION
+                            WHEN duplicate_object THEN null;
+                        END $$;
+                         """)
         self.connection.commit()
 
         # Function to create all the required tables:
@@ -45,22 +55,23 @@ class DB_handler:
     # Magazines, Volumes, Articles, Reporters,
     # As part of the creation of the articles table, a new type is created to store the article's pages
     def create_tables(self):
-        self.cursor.execute(" CREATE TABLE art_info.Newspapers(np_id UUID PRIMARY KEY, np_name TEXT) ")
+        self.cursor.execute(" CREATE TABLE IF NOT EXISTS art_info.Newspapers(np_id UUID PRIMARY KEY, np_name TEXT) ")
         self.connection.commit()
         self.cursor.execute("""
-                            CREATE TABLE art_info.Articles( article_id SERIAL PRIMARY KEY, article_title TEXT, 
-                            date DATE ,reporter_id INT, np_id UUID,
+                            CREATE TABLE IF NOT EXISTS art_info.Articles( article_id SERIAL PRIMARY KEY,  
+                            article_title TEXT, date DATE ,reporter_id INT, np_id UUID,
                             CONSTRAINT articles_fk FOREIGN KEY (np_id)
                             REFERENCES art_info.Newspapers (np_id));
                             """)
         self.connection.commit()
         self.cursor.execute(
-            " CREATE TABLE art_info.reporters(reporter_id SERIAL PRIMARY KEY, first_name TEXT, last_name TEXT) ")
+            " CREATE TABLE IF NOT EXISTS  art_info.reporters(reporter_id SERIAL PRIMARY KEY, "
+            " first_name TEXT, last_name TEXT) ")
         self.connection.commit()
-        self.cursor.execute(""" CREATE TABLE text_handle.words ( word_id SERIAL PRIMARY KEY, 
+        self.cursor.execute(""" CREATE TABLE IF NOT EXISTS text_handle.words ( word_id SERIAL PRIMARY KEY, 
                                 word TEXT, occurrences occurrence_type[]); """)
         self.connection.commit()
-        self.cursor.execute(""" CREATE TABLE text_handle.word_groups(group_id SERIAL PRIMARY KEY, 
+        self.cursor.execute(""" CREATE TABLE IF NOT EXISTS text_handle.word_groups(group_id SERIAL PRIMARY KEY, 
                              group_description TEXT, word_ids INTEGER[]); """)
         self.connection.commit()
         # self.cursor.execute(" CREATE TABLE text_handle.phrases(phrase_id SERIAL PRIMARY KEY, phrase TEXT )")
