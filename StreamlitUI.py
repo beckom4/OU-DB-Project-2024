@@ -3,16 +3,18 @@ from DB_handler import *
 from TextLoader import *
 from Article import Article
 from datetime import *
-import re
-
 from SearchWizard import *
+import pandas as pd
 
 
 def parse_date(date_str_inp):
-    # Remove the ordinal suffix
-    # Parse the date
-    date_obj = datetime.strptime(date_str_inp, "%B %d, %Y")
-    return date_obj
+    try:
+        # Try to parse the date string using the specified format
+        ret = datetime.strptime(date_str_inp, '%B %d, %Y')
+        return ret
+    except ValueError:
+        # If a ValueError is raised, the date string does not match the format
+        return None
 
 
 class StreamlitUI:
@@ -50,50 +52,68 @@ class StreamlitUI:
 
         if uploaded_file is not None:
             try:
-                article_text = uploaded_file.read().decode('utf-8')
-                lines = article_text.split('\n')
-
-                title = lines[0].strip()
-                authors = lines[1].strip()
-                date_art = lines[2].strip()
-                newspaper = st.text_input("Newspaper", value=uploaded_file.name.split('.')[0])
-                content = '\n'.join(lines[3:])
-
-                st.write(f"Title: {title}")
-                st.write(f"Authors: {authors}")
-                st.write(f"Date: {date_art}")
-                st.write(f"Newspaper: {newspaper}")
+                full_text_file = uploaded_file.read().decode('utf-8')
+                article = Article(full_text_file)
+                st.write(f"Title: {article.get_title()}")
+                st.write(f"Authors: {article.get_authors()}")
+                st.write(f"Newspaper name: {article.get_newspaper()}")
+                st.write(f"Date: {article.get_date()}")
+                st.write("--------------------")
                 st.write("Content Preview:")
-                st.write(content[:500] + "...")  # Show first 500 characters
-
+                st.write(article.get_content())
                 if st.button("Add Article"):
-                    try:
-                        date_obj = parse_date(date_art)
-                    except ValueError:
-                        st.error("Invalid date format. Please use YYYY-MM-DD.")
-                        return
-
-                    article = Article(title, authors, date_obj, content, newspaper)
                     article.process_content()
                     print("Article processed")
                     st.success("Article added successfully!")
-
             except Exception as e:
-                st.error(f'Error processing file: {str(e)}')
+                st.error('Error processing file. It is possible that the article is already in the system.')
         else:
             st.write("Please upload a .txt file to add an article.")
 
     def search_articles(self):
         st.subheader("Search Articles")
-        search_type = st.selectbox("Search article by", ["", "reporter", "newspaper", "date", "word"])
+        search_type = st.selectbox("Search article by", ["Please select", "reporter", "newspaper", "date", "word"])
 
         if search_type == "reporter":
             reporter_name = st.text_input("Please enter a reporter's name: ")
             articles_of_reporter = self.sw.search_reporter_articles(reporter_name)
-            if articles_of_reporter is not None:
-                st.write(f"Articles written by the {reporter_name}: ")
-                st.table(articles_of_reporter)
-            else:
+            if articles_of_reporter is not None and len(articles_of_reporter) != 0:
+                df = pd.DataFrame(articles_of_reporter, columns=["Article Title", "Newspaper", "Date"])
+                st.write(f"Articles written by {reporter_name}: ")
+                st.dataframe(df, hide_index=True)
+            elif articles_of_reporter is not None and len(articles_of_reporter) == 0:
+                st.write("No articles found.")
+        elif search_type == "newspaper":
+            newspaper_name = st.text_input("Please enter a newspaper's name: ")
+            articles_of_newspaper = self.sw.search_np_articles(newspaper_name)
+            if articles_of_newspaper is not None and len(articles_of_newspaper) != 0:
+                df = pd.DataFrame(articles_of_newspaper, columns=["Article Title" , "Date"])
+                st.write(f"Articles in {newspaper_name}: ")
+                st.dataframe(df, hide_index=True)
+            elif articles_of_newspaper is not None and len(articles_of_newspaper) == 0:
+                st.write("No articles found.")
+        elif search_type == "date":
+            date_str = st.text_input("Please enter a date (e.g. January 1, 2022): ")
+            if len(date_str) != 0:
+                p_date = parse_date(date_str)
+                if p_date is not None:
+                    articles_of_date = self.sw.search_articles_date(p_date)
+                    if articles_of_date is not None and len(articles_of_date) != 0:
+                        df = pd.DataFrame(articles_of_date, columns=["Article Title", "Newspaper"])
+                        st.write(f"Articles published on {date_str}: ")
+                        st.dataframe(df, hide_index=True)
+                    elif articles_of_date is not None and len(articles_of_date) == 0:
+                        st.write("No articles found.")
+                else:
+                    st.write("Invalid date format. Please enter a date in the format 'Month day, year'.")
+        elif search_type == "word":
+            word = st.text_input("Please enter a word: ")
+            articles_of_word = self.sw.search_articles_word(word)
+            if articles_of_word is not None and len(articles_of_word) != 0:
+                df = pd.DataFrame(articles_of_word, columns=["Article Title", "Newspaper", "Date"])
+                st.write(f"Articles containing the word '{word}': ")
+                st.dataframe(df, hide_index=True)
+            elif articles_of_word is not None and len(articles_of_word) == 0:
                 st.write("No articles found.")
 
     def view_article(self):
