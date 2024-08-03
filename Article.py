@@ -4,39 +4,47 @@ from datetime import *
 from TextLoader import *
 from typing import Dict, List, Tuple
 
+
 class Article:
-    def __init__(self, title: str, authors: str, date_param : datetime, content: str, newspaper: str):
-        self.title = title
-        self.authors = authors
-        self.date = date_param
-        self.content = content
-        self.newspaper = newspaper
+    def __init__(self, txt_file):
+        lines = txt_file.split('\n')
+        self.title = lines[0].strip()
+        self.authors = lines[1].strip()
+        self.newspaper = lines[2].strip()
+        self.date = lines[3].strip()
+        self.content = '\n'.join(lines[4:]).strip()
         self.words: Dict[str, List[Tuple[int, int, int, str]]] = {}
         self.tl = TextLoader()
 
     def process_content(self):
-        paragraphs = self.content.split('\n\n')
+        paragraphs = [p.strip() for p in re.split(r'\n\s*\n', self.content) if p.strip()]
         for p_index, paragraph in enumerate(paragraphs, start=1):
+            # Split each paragraph into lines
             lines = paragraph.split('\n')
+
             for l_index, line in enumerate(lines, start=1):
-                words = re.findall(r'\S+|\s+', line)
-                w_index = 0
-                # prev_punct = ''
-                for item in words:
-                    if re.match(r'\w+', item):  # It's a word
-                        w_index += 1
-                        next_punct = words[words.index(item) + 1] if words.index(item) + 1 < len(words) else ''
-                        next_punct = next_punct if not re.match(r'\w+', next_punct) else ''
-                        # if item not in self.words:
-                        self.words[item] = []
-                        self.words[item].append((p_index, l_index, w_index, next_punct))
-                        # prev_punct = ''
-                    # else:  # It's punctuation or whitespace
-                        # prev_punct += item
+                # Find all words and spaces in the line
+                line = re.sub(r'\r', '', line)
+                both = re.findall(r'(\w+\'?\w+)(\W+)(\r)?', line)
+                words = [x[0] for x in both]
+                spaces = [x[1] for x in both]
+                spaces.append('')  # Add an empty string for the last word
+                word_position = 0
+                for w_index, word in enumerate(words, start=1):
+                    # Clean the word from punctuation and get following characters
+                    clean_word = ''.join(c for c in word if c.isalnum() or c == "'")
+                    if clean_word:
+                        word_position += 1
+                        following_chars = word[len(clean_word):] + spaces[w_index - 1]
+                        if clean_word not in self.words:
+                            self.words[clean_word] = []
+                        self.words[clean_word].append((p_index, l_index, word_position, following_chars))
         reporter_id = self.tl.load_reporter(self.authors)
         np_id = self.tl.load_newspaper(self.newspaper)
         article_id = self.tl.load_article(np_id, self.title, self.date, reporter_id)
         self.tl.load_text(article_id, self.words)
+        print("Words are: ")
+        print(self.words)
 
     def print_words(self):
         print(f"Words Dictionary for article: {self.title}")
@@ -47,15 +55,26 @@ class Article:
                       f"Previous punctuation: '{pos[3]}', Next punctuation: '{pos[4]}'")
             print()  # Empty line for readability
 
+    def get_words_dictionary(self):
+        return self.words
 
-        # Database interaction comment:
-        """
-        To insert this article into the database:
-        1. Use TextLoader.load_reporter(self.authors) to get or create reporter_id
-        2. Use TextLoader.load_newspaper(self.newspaper) to get or create np_id
-        3. Use TextLoader.load_article(np_id, self.title, self.date, reporter_id) to insert the article
-        4. Use TextLoader.load_text(article_id, self.words) to insert the words and their positions
-        """
+    def get_title(self):
+        return self.title
+
+    def get_authors(self):
+        return self.authors
+
+    def get_newspaper(self):
+        return self.newspaper
+
+    def get_date(self):
+        return self.date
+
+    def get_content(self):
+        return self.content
+
+    def get_words(self):
+        return self.words
 
     def rebuild_content(self) -> str:
         sorted_words = sorted(
@@ -113,6 +132,7 @@ class Article:
         Use TextBuilder.build_words_index(word, self.title) to get the positions of the word in this article
         """
         pass
+
     #
     # def __init__(self, title, author, content):
     #     self.title = title
@@ -141,4 +161,3 @@ class Article:
     #
     # def find_words_count(self, word, number):
     #     pass
-
