@@ -1,12 +1,24 @@
 import streamlit as st
-from Database import Database
+from DB_handler import *
+from TextLoader import *
 from Article import Article
-import datetime
+from datetime import *
+import re
+
+from SearchWizard import *
+
+
+def parse_date(date_str_inp):
+    # Remove the ordinal suffix
+    # Parse the date
+    date_obj = datetime.strptime(date_str_inp, "%B %d, %Y")
+    return date_obj
 
 
 class StreamlitUI:
-    def __init__(self, database: Database):
+    def __init__(self, database: DB_handler):
         self.database = database
+        self.sw = SearchWizard()
 
     def run(self):
         st.title("News Article Database")
@@ -43,27 +55,27 @@ class StreamlitUI:
 
                 title = lines[0].strip()
                 authors = lines[1].strip()
-                date = lines[2].strip()
+                date_art = lines[2].strip()
                 newspaper = st.text_input("Newspaper", value=uploaded_file.name.split('.')[0])
                 content = '\n'.join(lines[3:])
 
                 st.write(f"Title: {title}")
                 st.write(f"Authors: {authors}")
-                st.write(f"Date: {date}")
+                st.write(f"Date: {date_art}")
                 st.write(f"Newspaper: {newspaper}")
                 st.write("Content Preview:")
                 st.write(content[:500] + "...")  # Show first 500 characters
 
                 if st.button("Add Article"):
                     try:
-                        date_obj = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+                        date_obj = parse_date(date_art)
                     except ValueError:
                         st.error("Invalid date format. Please use YYYY-MM-DD.")
                         return
 
-                    article = Article(title, authors, str(date_obj), content, newspaper)
+                    article = Article(title, authors, date_obj, content, newspaper)
                     article.process_content()
-                    self.database.add_article(article)
+                    print("Article processed")
                     st.success("Article added successfully!")
 
             except Exception as e:
@@ -73,32 +85,32 @@ class StreamlitUI:
 
     def search_articles(self):
         st.subheader("Search Articles")
-        search_type = st.selectbox("Search by", ["reporter", "newspaper", "date", "word"])
-        query = st.text_input("Enter search query")
+        search_type = st.selectbox("Search article by", ["", "reporter", "newspaper", "date", "word"])
 
-        if st.button("Search"):
-            results = self.database.search_articles(query, search_type)
-            if results:
-                for result in results:
-                    st.write(f"- {result[0]} ({result[1]})")
+        if search_type == "reporter":
+            reporter_name = st.text_input("Please enter a reporter's name: ")
+            articles_of_reporter = self.sw.search_reporter_articles(reporter_name)
+            if articles_of_reporter is not None:
+                st.write(f"Articles written by the {reporter_name}: ")
+                st.table(articles_of_reporter)
             else:
                 st.write("No articles found.")
 
-    # def view_article(self):
-    #     st.subheader("View Article")
-    #     title = st.text_input("Enter article title")
-    #
-    #     if st.button("View"):
-    #         # article = self.database.get_article(title)
-    #         if article:
-    #             st.write(f"Title: {article.title}")
-    #             st.write(f"Authors: {article.authors}")
-    #             st.write(f"Date: {article.date}")
-    #             st.write(f"Newspaper: {article.newspaper}")
-    #             st.write("Content:")
-    #             st.write(article.content)
-    #         else:
-    #             st.write("Article not found.")
+    def view_article(self):
+        st.subheader("View Article")
+        title = st.text_input("Enter article title")
+
+        if st.button("View"):
+            article = self.database.get_article(title)
+            if article:
+                st.write(f"Title: {article.title}")
+                st.write(f"Authors: {article.authors}")
+                st.write(f"Date: {article.date}")
+                st.write(f"Newspaper: {article.newspaper}")
+                st.write("Content:")
+                st.write(article.content)
+            else:
+                st.write("Article not found.")
 
     def word_statistics(self):
         st.subheader("Word Statistics")
