@@ -77,42 +77,60 @@ class DB_handler:
         # self.cursor.execute(" CREATE TABLE text_handle.phrases(phrase_id SERIAL PRIMARY KEY, phrase TEXT )")
         # self.connection.commit()
 
-    # def create_triggers(self):
-    # Create a trigger that will automatically increment the volume_id when a new volume is added.
-    # self.cursor.execute(" CREATE OR REPLACE FUNCTION art_info.generate_volume_id() "
-    #                     " RETURNS TRIGGER AS $$ "
-    #                     " DECLARE "
-    #                     " v_count INTEGER; "
-    #                     " BEGIN "
-    #                     " SELECT COUNT(*) INTO v_count FROM art_info.Volumes "
-    #                     " WHERE magazine_id = NEW.magazine_id; "
-    #                     " NEW.volume_id := v_count + 1; "
-    #                     " RETURN NEW; "
-    #                     " END; "
-    #                     " $$ LANGUAGE plpgsql; "
-    #                     " CREATE TRIGGER trigger_generate_volume_id "
-    #                     " BEFORE INSERT ON art_info.Volumes "
-    #                     " FOR EACH ROW "
-    #                     " EXECUTE FUNCTION art_info.generate_volume_id();")
-    # self.connection.commit()
-    # Create a trigger that will automatically increment the article_id when a new article is added.
-    # self.cursor.execute(" CREATE OR REPLACE FUNCTION art_info.generate_article_id() "
-    #                     " RETURNS TRIGGER AS $$ "
-    #                     " DECLARE "
-    #                     " a_count INTEGER;"
-    #                     " BEGIN "
-    #                     " SELECT COUNT(*) INTO a_count "
-    #                     " FROM art_info.Articles "
-    #                     " WHERE magazine_id = NEW.magazine_id AND volume_id = NEW.volume_id; "
-    #                     " NEW.article_id := a_count + 1; "
-    #                     " RETURN NEW; "
-    #                     " END; "
-    #                     " $$ LANGUAGE plpgsql; "
-    #                     " CREATE TRIGGER trigger_generate_article_id "
-    #                     " BEFORE INSERT ON art_info.Articles "
-    #                     " FOR EACH ROW "
-    #                     " EXECUTE FUNCTION art_info.generate_article_id();")
-    # self.connection.commit()
+    def create_triggers(self):
+    # Create a trigger that checks whether an article is already in the table or not.
+        self.cursor.execute(" CREATE OR REPLACE FUNCTION art_info.check_article_exists() "
+                            " RETURNS TRIGGER AS $$ "
+                            " BEGIN "
+                                " IF EXISTS (SELECT a.article_id "
+                                "            FROM art_info.articles a JOIN art_info.newspapers n "
+                                "            ON a.np_id = n.np_id"
+                                "            WHERE a.article_title = NEW.article_title AND a.date = NEW.date) THEN"
+                                "   RAISE NOTICE 'The article % exists already.', NEW.article_title; "
+                                "   RETURN NULL; "
+                                "ELSE "
+                                "   RETURN NEW; "
+                                "END IF; "
+                            " END; "
+                            " $$ LANGUAGE plpgsql; "
+                            " CREATE OR REPLACE TRIGGER article_insert_update_trigger "
+                            " BEFORE INSERT ON art_info.articles "
+                            "FOR EACH ROW EXECUTE FUNCTION art_info.check_article_exists(); ")
+        self.connection.commit()
+    # Create a trigger that checks if a newspaper already exists to prevent duplications.
+        self.cursor.execute(" CREATE OR REPLACE FUNCTION art_info.check_np_exists() "
+                            " RETURNS TRIGGER AS $$ "
+                            " BEGIN "
+                            " IF EXISTS (SELECT np_id "
+                            "            FROM art_info.newspapers "
+                            "            WHERE np_name = NEW.np_name) THEN"
+                            "   RETURN NULL; "
+                            "ELSE "
+                            "   RETURN NEW; "
+                            "END IF; "
+                            " END; "
+                            " $$ LANGUAGE plpgsql; "
+                            " CREATE OR REPLACE TRIGGER np_insert_trigger "
+                            " BEFORE INSERT ON art_info.newspapers "
+                            " FOR EACH ROW EXECUTE FUNCTION art_info.check_np_exists(); ")
+        self.connection.commit()
+    # Create a trigger that checks if a reporter already exists to prevent duplications.
+        self.cursor.execute(" CREATE OR REPLACE FUNCTION art_info.check_reporter_exists() "
+                            " RETURNS TRIGGER AS $$ "
+                            " BEGIN "
+                            " IF EXISTS (SELECT reporter_id "
+                            "            FROM art_info.reporters "
+                            "            WHERE first_name = NEW.first_name AND last_name = NEW.last_name ) THEN "
+                            "   RETURN NULL; "
+                            "ELSE "
+                            "   RETURN NEW; "
+                            "END IF; "
+                            " END; "
+                            " $$ LANGUAGE plpgsql; "
+                            " CREATE OR REPLACE TRIGGER reporter_insert_trigger "
+                            " BEFORE INSERT ON art_info.reporters "
+                            " FOR EACH ROW EXECUTE FUNCTION art_info.check_reporter_exists(); ")
+        self.connection.commit()
 
     # Getters:
 
@@ -139,7 +157,11 @@ class DB_handler:
                             " FROM text_handle.words "
                             " WHERE word = %s ",
                             (word,))
-        return self.cursor.fetchall()
+        res = self.cursor.fetchall()
+        if len(res) == 0:
+            return -1
+        else:
+            return res[0][0]
 
     def get_article_id_from_title(self, article_title):
         self.cursor.execute(" SELECT article_id "
