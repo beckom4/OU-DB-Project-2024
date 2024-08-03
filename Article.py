@@ -1,15 +1,18 @@
 # Handles text manipulation, file uploading, breaking down words, etc.
 import re
+from datetime import *
+from TextLoader import *
 from typing import Dict, List, Tuple
 
 class Article:
-    def __init__(self, title: str, authors: str, date: str, content: str, newspaper: str):
+    def __init__(self, title: str, authors: str, date_param : datetime, content: str, newspaper: str):
         self.title = title
         self.authors = authors
-        self.date = date
+        self.date = date_param
         self.content = content
         self.newspaper = newspaper
-        self.words: Dict[str, List[Tuple[int, int, int, str, str]]] = {}
+        self.words: Dict[str, List[Tuple[int, int, int, str]]] = {}
+        self.tl = TextLoader()
 
     def process_content(self):
         paragraphs = self.content.split('\n\n')
@@ -18,19 +21,22 @@ class Article:
             for l_index, line in enumerate(lines, start=1):
                 words = re.findall(r'\S+|\s+', line)
                 w_index = 0
-                prev_punct = ''
+                # prev_punct = ''
                 for item in words:
                     if re.match(r'\w+', item):  # It's a word
                         w_index += 1
                         next_punct = words[words.index(item) + 1] if words.index(item) + 1 < len(words) else ''
                         next_punct = next_punct if not re.match(r'\w+', next_punct) else ''
-                        if item not in self.words:
-                            self.words[item] = []
-                        self.words[item].append((p_index, l_index, w_index, prev_punct, next_punct))
-                        prev_punct = ''
-                    else:  # It's punctuation or whitespace
-                        prev_punct += item
-        self.print_words()
+                        # if item not in self.words:
+                        self.words[item] = []
+                        self.words[item].append((p_index, l_index, w_index, next_punct))
+                        # prev_punct = ''
+                    # else:  # It's punctuation or whitespace
+                        # prev_punct += item
+        reporter_id = self.tl.load_reporter(self.authors)
+        np_id = self.tl.load_newspaper(self.newspaper)
+        article_id = self.tl.load_article(np_id, self.title, self.date, reporter_id)
+        self.tl.load_text(article_id, self.words)
 
     def print_words(self):
         print(f"Words Dictionary for article: {self.title}")
@@ -135,5 +141,4 @@ class Article:
     #
     # def find_words_count(self, word, number):
     #     pass
-
 
