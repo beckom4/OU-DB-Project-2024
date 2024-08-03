@@ -92,7 +92,7 @@ class TextBuilder:
         res =[]
         lines_arr = []
         article_id = self.db_handler.get_article_id_from_title(article_title)[0][0]
-        word_id = self.db_handler.get_word_id_from_word(word)[0][0]
+        word_id = self.db_handler.get_word_id_from_word(word)
         self.db_handler.cursor.execute(" SELECT word, unnest(occurrences) "
                                        " FROM text_handle.words, "
                                        " LATERAL unnest(occurrences) AS outer_tuple "
@@ -145,7 +145,7 @@ class TextBuilder:
     # An index is defined as the position of the word in the article.
     # The position consists of the paragraph number, the line number and the position in the line.
     def build_words_index(self, word, article_title):
-        word_id = self.db_handler.get_word_id_from_word(word)[0][0]
+        word_id = self.db_handler.get_word_id_from_word(word)
         article_id = self.db_handler.get_article_id_from_title(article_title)[0][0]
         query = """
             WITH position_aggregation AS (
