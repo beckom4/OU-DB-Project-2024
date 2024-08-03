@@ -102,12 +102,10 @@ class TextLoader:
                 self.db_handler.connection.commit()
             # If the word is in the database, we add the new occurrences.
             else:
-                print("word is: ", word_occurrences[0])
-                print("Word occurrences: ", word_occurrences[1])
+                # print("word is: ", word_occurrences[0])
+                # print("Word occurrences: ", word_occurrences[1])
                 new_positions_array = "ARRAY[%s]::position_type[]" % ','.join(
-                    "ROW(%s, %s, %s, '%s', '%s', '%s')" % pos for pos in word_occurrences[1])
-
-                print("Test")
+                    "ROW(%s, %s, %s, '%s')" % pos for pos in word_occurrences[1])
 
                 # Create the new occurrence record
                 new_occurrence_record = "ROW(%s, %s)::occurrence_type" % (article_id[0][0], new_positions_array)
