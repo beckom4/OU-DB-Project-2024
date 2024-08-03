@@ -86,7 +86,7 @@ class TextLoader:
     #
     def load_text(self, article_id, dict_text):
         dis_text = convert_dict_to_array_of_tuples(dict_text)
-        print("complete list: ", dis_text)
+        # print("complete list: ", dis_text)
         for word_occurrences in dis_text:
             self.db_handler.cursor.execute("SELECT word_id FROM text_handle.words WHERE word = %s",
                                            (word_occurrences[0],))
@@ -103,8 +103,11 @@ class TextLoader:
             # If the word is in the database, we add the new occurrences.
             else:
                 print("word is: ", word_occurrences[0])
+                print("Word occurrences: ", word_occurrences[1])
                 new_positions_array = "ARRAY[%s]::position_type[]" % ','.join(
                     "ROW(%s, %s, %s, '%s', '%s', '%s')" % pos for pos in word_occurrences[1])
+
+                print("Test")
 
                 # Create the new occurrence record
                 new_occurrence_record = "ROW(%s, %s)::occurrence_type" % (article_id[0][0], new_positions_array)
