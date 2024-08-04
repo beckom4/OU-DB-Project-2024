@@ -79,7 +79,7 @@ class StreamlitUI:
             articles_of_reporter = self.sw.search_reporter_articles(reporter_name)
             if articles_of_reporter is not None and len(articles_of_reporter) != 0:
                 df = pd.DataFrame(articles_of_reporter, columns=["Article Title", "Newspaper", "Date"])
-                st.write(f"Articles written by {reporter_name}: ")
+                st.subheader(f"Articles written by {reporter_name}: ")
                 st.dataframe(df, hide_index=True)
             elif articles_of_reporter is not None and len(articles_of_reporter) == 0:
                 st.write("No articles found.")
@@ -88,7 +88,7 @@ class StreamlitUI:
             articles_of_newspaper = self.sw.search_np_articles(newspaper_name)
             if articles_of_newspaper is not None and len(articles_of_newspaper) != 0:
                 df = pd.DataFrame(articles_of_newspaper, columns=["Article Title" , "Date"])
-                st.write(f"Articles in {newspaper_name}: ")
+                st.subheader(f"Articles in {newspaper_name}: ")
                 st.dataframe(df, hide_index=True)
             elif articles_of_newspaper is not None and len(articles_of_newspaper) == 0:
                 st.write("No articles found.")
@@ -100,7 +100,7 @@ class StreamlitUI:
                     articles_of_date = self.sw.search_articles_date(p_date)
                     if articles_of_date is not None and len(articles_of_date) != 0:
                         df = pd.DataFrame(articles_of_date, columns=["Article Title", "Newspaper"])
-                        st.write(f"Articles published on {date_str}: ")
+                        st.subheader(f"Articles published on {date_str}: ")
                         st.dataframe(df, hide_index=True)
                     elif articles_of_date is not None and len(articles_of_date) == 0:
                         st.write("No articles found.")
@@ -111,7 +111,7 @@ class StreamlitUI:
             articles_of_word = self.sw.search_articles_word(word)
             if articles_of_word is not None and len(articles_of_word) != 0:
                 df = pd.DataFrame(articles_of_word, columns=["Article Title", "Newspaper", "Date"])
-                st.write(f"Articles containing the word '{word}': ")
+                st.subheader(f"Articles containing the word '{word}': ")
                 st.dataframe(df, hide_index=True)
             elif articles_of_word is not None and len(articles_of_word) == 0:
                 st.write("No articles found.")
