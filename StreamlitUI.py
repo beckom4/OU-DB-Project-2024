@@ -1,6 +1,6 @@
 import streamlit as st
 from DB_handler import *
-from TextLoader import *
+from TextBuilder import *
 from Article import Article
 from datetime import *
 from SearchWizard import *
@@ -21,6 +21,7 @@ class StreamlitUI:
     def __init__(self, database: DB_handler):
         self.database = database
         self.sw = SearchWizard()
+        seld.tb = TextBuilder()
 
     def run(self):
         st.title("News Article Database")
