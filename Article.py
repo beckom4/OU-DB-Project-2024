@@ -17,7 +17,9 @@ class Article:
         self.tl = TextLoader()
 
     def process_content(self):
+
         paragraphs = [p.strip() for p in re.split(r'\n\s*\n', self.content) if p.strip()]
+
         for p_index, paragraph in enumerate(paragraphs, start=1):
             # Split each paragraph into lines
             lines = paragraph.split('\n')
@@ -25,17 +27,13 @@ class Article:
             for l_index, line in enumerate(lines, start=1):
                 # Find all words and spaces in the line
                 line = re.sub(r'\r', '', line)
-                both = re.findall(r'(\w+\'?\w+)(\W+)(\r)?', line)
-                words = [x[0] for x in both]
-                spaces = [x[1] for x in both]
-                spaces.append('')  # Add an empty string for the last word
+                both = re.findall(r'(\w+\'?\w*|\w)(\W*)', line)
                 word_position = 0
-                for w_index, word in enumerate(words, start=1):
-                    # Clean the word from punctuation and get following characters
-                    clean_word = ''.join(c for c in word if c.isalnum() or c == "'")
+                for w_index, (word, space) in enumerate(both, start=1):
+                    clean_word = word.strip("'")  # Remove leading/trailing apostrophes
                     if clean_word:
                         word_position += 1
-                        following_chars = word[len(clean_word):] + spaces[w_index - 1]
+                        following_chars = word[len(clean_word):] + space
                         if clean_word not in self.words:
                             self.words[clean_word] = []
                         self.words[clean_word].append((p_index, l_index, word_position, following_chars))
