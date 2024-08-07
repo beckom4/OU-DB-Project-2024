@@ -53,10 +53,11 @@ class SearchWizard:
     # Search for all the articles in a specific newspaper.
     # The assumption is that there are no 2 magazines with the same name.
     def search_np_articles(self, np_name):
-        if len(np_name) == 0:
+        np_id_ret = self.db_handler.get_np_id_from_name(np_name)
+        if len(np_id_ret) == 0:
             return None
         else:
-            np_id = self.db_handler.get_np_id_from_name(np_name)[0][0]
+            np_id = np_id_ret[0][0]
             self.db_handler.cursor.execute(" SELECT article_title, date "
                                            " FROM art_info.articles WHERE np_id = %s", (np_id,))
             self.db_handler.connection.commit()
