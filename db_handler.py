@@ -30,15 +30,10 @@ class DB_handler:
         self.connection.commit()
 
     def create_types(self):
-        # self.cursor.execute("""
-        #     CREATE TYPE text_handle.position_type AS (paragraph_number INTEGER, line_number INTEGER,
-        #     position_in_line INTEGER, finishing_chars varchar(10));
-        #     CREATE TYPE text_handle.occurrence_type AS ( article_id INTEGER, positions position_type[] );
-        # """)
         self.cursor.execute("""
                         DO $$ BEGIN
                             CREATE TYPE position_type AS ( paragraph_number INTEGER, line_number INTEGER, 
-                            position_in_line INTEGER, finishing_chars varchar(10));
+                            position_in_line INTEGER, finishing_chars varchar(10), starting_chars varchar(10));
                         EXCEPTION
                             WHEN duplicate_object THEN null;
                         END $$;
