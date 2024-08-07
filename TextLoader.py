@@ -21,13 +21,6 @@ def parse_name(full_name):
     return first_name, last_name
 
 
-# def convert_dicts_to_tuples(array_of_dicts):
-#     res = []
-#     for d in array_of_dicts:
-#         for key, value in d.items():
-#             res.append((key, value))
-#     return res
-
 def convert_dict_to_array_of_tuples(big_dict):
     array_of_tuples = []
     for key, value in big_dict.items():
@@ -37,10 +30,10 @@ def convert_dict_to_array_of_tuples(big_dict):
 
 def replace_quotes(word_occurrence):
     for i, occurrence in enumerate(word_occurrence):
-        if '"' in occurrence[3]:
-            temp_str = occurrence[3].replace(r'"', '&&&')
-            new_occ = occurrence[:3] + (temp_str,)
-            word_occurrence[i] = new_occ
+        temp_str1 = occurrence[4].replace(r'"', '&&&').replace(r',', 'pppuuu').replace(r'(', 'hhhaaa')
+        temp_str2 = occurrence[3].replace(r'"', '&&&').replace(r',', 'pppuuu').replace(r')', 'hhhbbb')
+        new_occ = (occurrence[0], occurrence[1], occurrence[2], temp_str2, temp_str1)
+        word_occurrence[i] = new_occ
 
 
 class TextLoader:
@@ -86,7 +79,6 @@ class TextLoader:
     #
     def load_text(self, article_id, dict_text):
         dis_text = convert_dict_to_array_of_tuples(dict_text)
-        # print("complete list: ", dis_text)
         for word_occurrences in dis_text:
             self.db_handler.cursor.execute("SELECT word_id FROM text_handle.words WHERE word = %s",
                                            (word_occurrences[0],))
@@ -102,21 +94,17 @@ class TextLoader:
                 self.db_handler.connection.commit()
             # If the word is in the database, we add the new occurrences.
             else:
-                # print("word is: ", word_occurrences[0])
-                # print("Word occurrences: ", word_occurrences[1])
                 new_positions_array = "ARRAY[%s]::position_type[]" % ','.join(
-                    "ROW(%s, %s, %s, '%s')" % pos for pos in word_occurrences[1])
-
+                    "ROW(%s, %s, %s, '%s', '%s')" % pos for pos in word_occurrences[1])
                 # Create the new occurrence record
                 new_occurrence_record = "ROW(%s, %s)::occurrence_type" % (article_id[0][0], new_positions_array)
-
                 # Update the table to add the new occurrence
                 self.db_handler.cursor.execute(
                     f"""
                     UPDATE text_handle.words 
                     SET occurrences = array_append(occurrences, {new_occurrence_record})
-                    WHERE word = %s
+                    WHERE word_id = %s
                     """,
-                    (word_occurrences[0],)
+                    (word_id[0][0],)
                 )
                 self.db_handler.connection.commit()
