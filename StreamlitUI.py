@@ -1,9 +1,10 @@
 import streamlit as st
 from DB_handler import *
-from TextBuilder import *
+from TextLoader import *
 from Article import Article
 from datetime import *
 from SearchWizard import *
+from TextBuilder import *
 import pandas as pd
 
 
@@ -21,12 +22,12 @@ class StreamlitUI:
     def __init__(self, database: DB_handler):
         self.database = database
         self.sw = SearchWizard()
-        seld.tb = TextBuilder()
+        self.tb = TextBuilder()
 
     def run(self):
         st.title("News Article Database")
 
-        menu = ["Home", "Add Article", "Search Articles", "View Article", "Word Statistics", "Print Words Dictionary"]
+        menu = ["Home", "Add Article", "Search Articles", "View", "Word Statistics", "Print Words Dictionary"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Home":
@@ -35,8 +36,8 @@ class StreamlitUI:
             self.add_article()
         elif choice == "Search Articles":
             self.search_articles()
-        elif choice == "View Article":
-            self.view_article()
+        elif choice == "View":
+            self.view()
         elif choice == "Word Statistics":
             self.word_statistics()
         elif choice == "Print Words Dictionary":
@@ -64,7 +65,6 @@ class StreamlitUI:
                 st.write(article.get_content())
                 if st.button("Add Article"):
                     article.process_content()
-                    print("Article processed")
                     st.success("Article added successfully!")
             except Exception as e:
                 st.error('Error processing file. It is possible that the article is already in the system.')
@@ -93,6 +93,8 @@ class StreamlitUI:
                 st.dataframe(df, hide_index=True)
             elif articles_of_newspaper is not None and len(articles_of_newspaper) == 0:
                 st.write("No articles found.")
+            elif articles_of_newspaper is None and len(newspaper_name) != 0:
+                st.write("Invalid newspaper")
         elif search_type == "date":
             date_str = st.text_input("Please enter a date (e.g. January 1, 2022): ")
             if len(date_str) != 0:
@@ -117,21 +119,75 @@ class StreamlitUI:
             elif articles_of_word is not None and len(articles_of_word) == 0:
                 st.write("No articles found.")
 
-    def view_article(self):
-        st.subheader("View Article")
-        title = st.text_input("Enter article title")
-
-        if st.button("View"):
-            article = self.database.get_article(title)
-            if article:
-                st.write(f"Title: {article.title}")
-                st.write(f"Authors: {article.authors}")
-                st.write(f"Date: {article.date}")
-                st.write(f"Newspaper: {article.newspaper}")
-                st.write("Content:")
-                st.write(article.content)
+    def view(self):
+        st.subheader("View")
+        view_type = st.selectbox("What do you want to view?",
+                                 ["Please select", "Article", "All words in db", "All words in article",
+                                  "Index of all words in article"])
+        if view_type == "Article":
+            article_title = st.text_input("Enter article title")
+            if st.button("View"):
+                article = self.tb.build_entire_text(article_title)
+                if article:
+                    st.write(f"Title: {article[0]}")
+                    st.write(f"Date: {article[1]}")
+                    st.write(f"Reporter: {article[2]}")
+                    st.write("Content:")
+                    st.write(article[3])
+                else:
+                    st.write("Article not found.")
+        elif view_type == "All words in db":
+            words = self.tb.all_words()
+            if words:
+                st.subheader("All the words in the database are: ")
+                for word_tup in words:
+                    st.write(word_tup[0])
+                st.write(words)
             else:
-                st.write("Article not found.")
+                st.write("The database has no words yet.")
+        elif view_type == "All words in article":
+            article_title = st.text_input("Enter article title")
+            if st.button("View"):
+                words = self.tb.all_words_in_article(article_title)
+                if words:
+                    st.subheader(f"All the words in the article '{article_title}' are: ")
+                    for word_tup in words:
+                        st.write(word_tup[0])
+                elif article_title and words is None:
+                    st.write("The article is empty")
+                else:
+                    st.write("Article not found.")
+        elif view_type == "Index of all words in article":
+            article_title = st.text_input("Enter article title")
+            if st.button("View") and article_title:
+                words_index = self.tb.build_words_index(article_title)
+                if len(article_title) != 0 and words_index is None:
+                    st.write("Invalid article title")
+                elif words_index:
+                    df = pd.DataFrame(words_index, columns=["Word", "Index"])
+                    st.subheader(f"The words index in the article '{article_title}': ")
+                    st.write("* Please note that the index is a paragraph number, row number and position in the row")
+                    st.dataframe(df, hide_index=True, width = 1000)
+                elif article_title and words_index is None:
+                    st.write("The article is empty")
+                else:
+                    st.write("Article not found.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def word_statistics(self):
         st.subheader("Word Statistics")
