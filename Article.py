@@ -1,8 +1,43 @@
 # Handles text manipulation, file uploading, breaking down words, etc.
 import re
-from datetime import *
 from TextLoader import *
 from typing import Dict, List, Tuple
+
+
+def split_word(word):
+    index1 = 0
+    beg_chars = ''
+    while index1 < len(word) and not word[index1].isalnum():
+        if index1 < len(word):
+            beg_chars += word[index1]
+        index1 += 1
+    end_chars_rev = ''
+    index2 = len(word) - 1
+    while index2 >= 0 and not word[index2].isalnum():
+        if index2 >= 0:
+            end_chars_rev += word[index2]
+        index2 -= 1
+    end_chars = ''
+    for char in reversed(end_chars_rev):
+        end_chars += char
+    return beg_chars, word[index1:index2 + 1], end_chars
+
+
+def check_str_for_quotes(input_string):
+    ret = (input_string.replace("'", "hhhaaa")
+           .replace("’", "hhhbbb")
+           .replace(r'-', 'hhhccc')
+           .replace("/", "hhhddd")
+           .replace("\\", "hhheee"))
+
+    return ret
+
+
+def is_only_none_alnum(word):
+    for char in word:
+        if char.isalnum():
+            return False
+    return True
 
 
 class Article:
@@ -13,36 +48,37 @@ class Article:
         self.newspaper = lines[2].strip()
         self.date = lines[3].strip()
         self.content = '\n'.join(lines[4:]).strip()
-        self.words: Dict[str, List[Tuple[int, int, int, str]]] = {}
+        self.words: Dict[str, List[Tuple[int, int, int, str, str]]] = {}
         self.tl = TextLoader()
 
     def process_content(self):
-
         paragraphs = [p.strip() for p in re.split(r'\n\s*\n', self.content) if p.strip()]
-
         for p_index, paragraph in enumerate(paragraphs, start=1):
-            # Split each paragraph into lines
             lines = paragraph.split('\n')
-
             for l_index, line in enumerate(lines, start=1):
-                # Find all words and spaces in the line
-                line = re.sub(r'\r', '', line)
-                both = re.findall(r'(\w+\'?\w*|\w)(\W*)', line)
+                is_last_line_in_paragraph = (l_index == len(lines))
+                words_in_line = line.split()
                 word_position = 0
-                for w_index, (word, space) in enumerate(both, start=1):
-                    clean_word = word.strip("'")  # Remove leading/trailing apostrophes
-                    if clean_word:
-                        word_position += 1
-                        following_chars = word[len(clean_word):] + space
-                        if clean_word not in self.words:
-                            self.words[clean_word] = []
-                        self.words[clean_word].append((p_index, l_index, word_position, following_chars))
+                for w_index, word in enumerate(words_in_line, start=1):
+                    if not is_only_none_alnum(word):
+                        word_tuple = split_word(word)
+                    else:
+                        word_tuple = ('', word, '')
+                    is_last_word_in_line = (w_index == len(words_in_line))
+                    word_position += 1
+                    if is_last_line_in_paragraph and is_last_word_in_line:
+                        tup = (p_index, l_index, word_position, word_tuple[2] + '\n\n', word_tuple[0])
+                    elif is_last_word_in_line:
+                        tup = (p_index, l_index, word_position, word_tuple[2] + '\n', word_tuple[0])
+                    else:
+                        tup = (p_index, l_index, word_position, word_tuple[2], word_tuple[0])
+                    if word_tuple[1] not in self.words:
+                        self.words[word_tuple[1]] = []
+                    self.words[word_tuple[1]].append(tup)
         reporter_id = self.tl.load_reporter(self.authors)
         np_id = self.tl.load_newspaper(self.newspaper)
         article_id = self.tl.load_article(np_id, self.title, self.date, reporter_id)
         self.tl.load_text(article_id, self.words)
-        print("Words are: ")
-        print(self.words)
 
     def print_words(self):
         print(f"Words Dictionary for article: {self.title}")
