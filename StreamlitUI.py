@@ -27,15 +27,15 @@ class StreamlitUI:
     def run(self):
         st.title("News Article Database")
 
-        menu = ["Home", "Add Article", "Search Articles", "View", "Word Statistics", "Print Words Dictionary"]
+        menu = ["Home", "Add Article", "Search", "View", "Word Statistics", "Print Words Dictionary"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Home":
             self.show_home()
         elif choice == "Add Article":
             self.add_article()
-        elif choice == "Search Articles":
-            self.search_articles()
+        elif choice == "Search":
+            self.search()
         elif choice == "View":
             self.view()
         elif choice == "Word Statistics":
@@ -70,6 +70,14 @@ class StreamlitUI:
                 st.error('Error processing file. It is possible that the article is already in the system.')
         else:
             st.write("Please upload a .txt file to add an article.")
+
+    def search(self):
+        st.subheader("Search")
+        search_type = st.selectbox("What would you like to search for?", ["Please select", "Article", "Word",])
+        if search_type == "Article":
+            self.search_articles()
+        elif search_type == "Word":
+            self.search_word()
 
     def search_articles(self):
         st.subheader("Search Articles")
@@ -118,6 +126,22 @@ class StreamlitUI:
                 st.dataframe(df, hide_index=True)
             elif articles_of_word is not None and len(articles_of_word) == 0:
                 st.write("No articles found.")
+
+    def search_word(self):
+        st.subheader("Search Word")
+        article_title = st.text_input("Enter article title")
+        paragraph_number = st.text_input("Enter paragraph number")
+        line_number = st.text_input("Enter line number")
+        position_in_line = st.text_input("Enter position in line")
+        if st.button("Search"):
+            if len(article_title) != 0 and len(paragraph_number) != 0 and len(line_number) != 0 and len(position_in_line) != 0:
+                word = self.sw.search_word_at_position(article_title, paragraph_number, line_number, position_in_line)
+                if word:
+                    st.write(f"The word at position ({paragraph_number}, {line_number}, {position_in_line}) in the article '{article_title}' is: {word}")
+                else:
+                    st.write("Word not found.")
+            else:
+                st.write("Please fill all fields.")
 
     def view(self):
         st.subheader("View")
