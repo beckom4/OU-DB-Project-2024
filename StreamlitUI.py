@@ -1,10 +1,12 @@
+from text_highlighter import text_highlighter
+from streamlit_annotation_tools import text_highlighter
+
 import streamlit as st
-from DB_handler import *
-from TextLoader import *
 from Article import Article
 from datetime import *
 from SearchWizard import *
 from TextBuilder import *
+from WordGroup import *
 import pandas as pd
 
 
@@ -18,16 +20,24 @@ def parse_date(date_str_inp):
         return None
 
 
+def make_arr_from_tuparr(tup_arr):
+    ret = []
+    for tup in tup_arr:
+        ret.append(tup[0])
+    return ret
+
+
 class StreamlitUI:
     def __init__(self, database: DB_handler):
-        self.database = database
+        self.database = DB_handler()
         self.sw = SearchWizard()
         self.tb = TextBuilder()
+        self.wg = WordGroup()
 
     def run(self):
         st.title("News Article Database")
 
-        menu = ["Home", "Add Article", "Search", "View", "Word Statistics", "Print Words Dictionary"]
+        menu = ["Home", "Add Article", "Search", "View", "Word groups", "Word Statistics", "Print Words Dictionary"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Home":
@@ -38,6 +48,8 @@ class StreamlitUI:
             self.search()
         elif choice == "View":
             self.view()
+        elif choice == "Word groups":
+            self.word_groups()
         elif choice == "Word Statistics":
             self.word_statistics()
         elif choice == "Print Words Dictionary":
@@ -73,7 +85,7 @@ class StreamlitUI:
 
     def search(self):
         st.subheader("Search")
-        search_type = st.selectbox("What would you like to search for?", ["Please select", "Article", "Word",])
+        search_type = st.selectbox("What would you like to search for?", ["Please select", "Article", "Word", ])
         if search_type == "Article":
             self.search_articles()
         elif search_type == "Word":
@@ -96,7 +108,7 @@ class StreamlitUI:
             newspaper_name = st.text_input("Please enter a newspaper's name: ")
             articles_of_newspaper = self.sw.search_np_articles(newspaper_name)
             if articles_of_newspaper is not None and len(articles_of_newspaper) != 0:
-                df = pd.DataFrame(articles_of_newspaper, columns=["Article Title" , "Date"])
+                df = pd.DataFrame(articles_of_newspaper, columns=["Article Title", "Date"])
                 st.subheader(f"Articles in {newspaper_name}: ")
                 st.dataframe(df, hide_index=True)
             elif articles_of_newspaper is not None and len(articles_of_newspaper) == 0:
@@ -134,10 +146,12 @@ class StreamlitUI:
         line_number = st.text_input("Enter line number")
         position_in_line = st.text_input("Enter position in line")
         if st.button("Search"):
-            if len(article_title) != 0 and len(paragraph_number) != 0 and len(line_number) != 0 and len(position_in_line) != 0:
+            if len(article_title) != 0 and len(paragraph_number) != 0 and len(line_number) != 0 and len(
+                    position_in_line) != 0:
                 word = self.sw.search_word_at_position(article_title, paragraph_number, line_number, position_in_line)
                 if word:
-                    st.write(f"The word at position ({paragraph_number}, {line_number}, {position_in_line}) in the article '{article_title}' is: {word}")
+                    st.write(
+                        f"The word at position ({paragraph_number}, {line_number}, {position_in_line}) in the article '{article_title}' is: {word}")
                 else:
                     st.write("Word not found.")
             else:
@@ -191,27 +205,84 @@ class StreamlitUI:
                     df = pd.DataFrame(words_index, columns=["Word", "Index"])
                     st.subheader(f"The words index in the article '{article_title}': ")
                     st.write("* Please note that the index is a paragraph number, row number and position in the row")
-                    st.dataframe(df, hide_index=True, width = 1000)
+                    st.dataframe(df, hide_index=True, width=1000)
                 elif article_title and words_index is None:
                     st.write("The article is empty")
                 else:
                     st.write("Article not found.")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def word_groups(self):
+        st.subheader("Word Groups")
+        wg_type = st.selectbox("What would you like to do?",
+                               ["Please select", "Create group", "Add word to existing group", "My groups"])
+        if wg_type == "Create group":
+            group_description = st.text_input("Enter group description")
+            group_id = self.wg.get_group_id(group_description)
+            if group_id and st.button("Create group") and len(group_description) != 0:
+                st.error("Group already exists.")
+            elif group_id is None and st.button("Create group") and len(group_description) != 0:
+                try:
+                    self.wg.create_group(group_description)
+                    st.success(f"Group {group_description} created successfully.\n "
+                               f" Please check out the 'Add word to existing group' option to add words to the group.")
+                except Exception as e:
+                    st.error("Error while creating the group.")
+        elif wg_type == "Add word to existing group":
+            group_description = st.text_input("Enter group description")
+            group_id = self.wg.get_group_id(group_description)
+            # if st.button("Continue"):
+            if group_id:
+                add_type = st.selectbox("How would you like to add the word to the group?",
+                                        ["Please select", "Type word", "Select from a list of words"])
+                if add_type == "Type word":
+                    word = st.text_input("Please enter the word you would like to add to the group.")
+                    word_id = self.database.get_word_id_from_word(word)
+                    is_in_group = self.wg.is_word_in_group(group_id, word_id)
+                    if is_in_group:
+                        st.error(f"The word {word} is already in the group.")
+                    else:
+                        if st.button("Add word to group"):
+                            if word_id == -1:
+                                st.error("The word you're trying to enter is not any of the articles.")
+                            else:
+                                try:
+                                    self.wg.add_word_to_group(group_id, word_id)
+                                    st.success(f"The word {word} has been added to the list.")
+                                except Exception as e:
+                                    st.error("Error while adding the word to the group.")
+                elif add_type == "Select from a list of words":
+                    word_options = ["Please select"]
+                    word_options.extend(make_arr_from_tuparr(self.tb.all_words()))
+                    word = st.selectbox(f"Which word would you like to add to the group {group_description}?",
+                                        word_options)
+                    if word != "Please select":
+                        word_id = self.database.get_word_id_from_word(word)
+                        is_in_group = self.wg.is_word_in_group(group_id, word_id)
+                        if is_in_group:
+                            st.error(f"The word {word} is already in the group.")
+                        else:
+                            if word_id == -1:
+                                st.error("The word you're trying to enter is not any of the articles.")
+                            else:
+                                try:
+                                    self.wg.add_word_to_group(group_id, word_id)
+                                    st.success(f"The word {word} has been added to the list.")
+                                except Exception as e:
+                                    st.error("Error while adding the word to the group.")
+            elif not group_id and group_description:
+                st.error("Group not found.")
+        elif wg_type == "My groups":
+            groups = ["Please select"]
+            groups.extend(make_arr_from_tuparr(self.wg.get_all_groups()))
+            group = st.selectbox("My groups:", groups)
+            if group != "Please select":
+                words = self.wg.get_group(group)
+                if words:
+                    st.subheader(f"Words in group {group}:")
+                    for word in words:
+                        st.write(word)
+                else:
+                    st.write("Group is empty.")
 
     def word_statistics(self):
         st.subheader("Word Statistics")
