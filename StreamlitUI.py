@@ -1,148 +1,344 @@
+"""
+This module implements the Streamlit-based user interface for the News Article Database application.
+It provides a graphical interface for various functionalities including article management,
+searching, viewing, word group operations, phrase handling, and statistical analysis.
+"""
+
+
+
 import streamlit as st
-from DB_handler import *
-from TextLoader import *
-from Article import Article
-from datetime import *
-import re
 
-from SearchWizard import *
+from db_handler import DB_handler
+from article import *
+from search_wizard import *
+from word_group import *
+from phrases import *
+from collections import Counter
+import plotly.express as px
+from stats import Stats
 
 
-def parse_date(date_str_inp):
-    # Remove the ordinal suffix
-    # Parse the date
-    date_obj = datetime.strptime(date_str_inp, "%B %d, %Y")
-    return date_obj
+def count_sentences(text):
+    """
+    Count the number of sentences in a given text.
 
+    Args:
+        text (str): The input text.
+
+    Returns:
+        int: The number of sentences in the text.
+    """
+    # pattern = r'(?<=[.!?])\s+(?=[A-Z])|(?<=[.!?])\s*$'
+    pattern = r'[.]' # Split by period
+    sentences = re.split(pattern, text)
+    print("+++++++++++++++++++++++++++++++")
+    print(text)
+    print("------------------------")
+    print(sentences)
+    print("+++++++++++++++++++++++++++++++")
+
+    # Filter out empty strings
+    sentences = [s.strip() for s in sentences if s.strip()]
+    return len(sentences)
 
 class StreamlitUI:
+    """
+    Implements the Streamlit-based user interface for the News Article Database application.
+
+    This class provides methods for different functionalities of the application,
+    including adding articles, searching, viewing, managing word groups, and analyzing statistics.
+    """
     def __init__(self, database: DB_handler):
-        self.database = database
+        """
+        Initialize the StreamlitUI with necessary components.
+
+        Args:
+            database (DB_handler): An instance of the database handler.
+        """
+        self.database = DB_handler()
         self.sw = SearchWizard()
+        self.tb = TextBuilder()
+        self.wg = WordGroup()
+        self.ph = Phrases()
 
     def run(self):
+        """
+        Run the main Streamlit application.
+
+        This method sets up the sidebar menu and handles navigation between different functionalities.
+        """
         st.title("News Article Database")
 
-        menu = ["Home", "Add Article", "Search Articles", "View Article", "Word Statistics", "Print Words Dictionary"]
+        menu = ["Home", "Add Article", "Search", "View", "Word groups",
+                "Phrases", "Word Statistics"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Home":
             self.show_home()
         elif choice == "Add Article":
             self.add_article()
-        elif choice == "Search Articles":
-            self.search_articles()
-        elif choice == "View Article":
-            self.view_article()
+        elif choice == "Search":
+            self.search()
+        elif choice == "View":
+            self.view()
+        elif choice == "Word groups":
+            self.word_groups()
+        elif choice == "Phrases":
+            self.phrases()
         elif choice == "Word Statistics":
             self.word_statistics()
-        elif choice == "Print Words Dictionary":
-            self.print_words_dictionary()
 
     def show_home(self):
+        """Display the home page of the application."""
         st.write("Welcome to the News Article Database!")
         st.write("Use the sidebar to navigate through different functions.")
 
     def add_article(self):
+        """Handle the functionality for adding a new article to the database."""
         st.subheader("Add a New Article")
 
         uploaded_file = st.file_uploader("Choose a .txt file", type="txt")
 
         if uploaded_file is not None:
             try:
-                article_text = uploaded_file.read().decode('utf-8')
-                lines = article_text.split('\n')
-
-                title = lines[0].strip()
-                authors = lines[1].strip()
-                date_art = lines[2].strip()
-                newspaper = st.text_input("Newspaper", value=uploaded_file.name.split('.')[0])
-                content = '\n'.join(lines[3:])
-
-                st.write(f"Title: {title}")
-                st.write(f"Authors: {authors}")
-                st.write(f"Date: {date_art}")
-                st.write(f"Newspaper: {newspaper}")
+                full_text_file = uploaded_file.read().decode('utf-8')
+                article = Article(full_text_file)
+                st.write(f"Title: {article.get_title()}")
+                st.write(f"Authors: {article.get_authors()}")
+                st.write(f"Newspaper name: {article.get_newspaper()}")
+                st.write(f"Date: {article.get_date()}")
+                st.write("--------------------")
                 st.write("Content Preview:")
-                st.write(content[:500] + "...")  # Show first 500 characters
-
+                st.write(article.get_content())
                 if st.button("Add Article"):
-                    try:
-                        date_obj = parse_date(date_art)
-                    except ValueError:
-                        st.error("Invalid date format. Please use YYYY-MM-DD.")
-                        return
-
-                    article = Article(title, authors, date_obj, content, newspaper)
                     article.process_content()
-                    print("Article processed")
                     st.success("Article added successfully!")
-
             except Exception as e:
-                st.error(f'Error processing file: {str(e)}')
+                st.error('Error processing file. It is possible that the article is already in the system.')
         else:
             st.write("Please upload a .txt file to add an article.")
 
+    def search(self):
+        """Handle the search functionality, allowing users to search for articles or words."""
+        st.subheader("Search")
+        search_type = st.selectbox("What would you like to search for?", ["Please select", "Articles", "Word", ])
+        if search_type == "Articles":
+            self.search_articles()
+        elif search_type == "Word":
+            self.search_word()
+
     def search_articles(self):
+        """Handle the functionality for searching articles by different criteria."""
         st.subheader("Search Articles")
-        search_type = st.selectbox("Search article by", ["", "reporter", "newspaper", "date", "word"])
-
+        search_type = st.selectbox("Search articles by", ["Please select", "reporter", "newspaper", "date", "word"])
         if search_type == "reporter":
-            reporter_name = st.text_input("Please enter a reporter's name: ")
-            articles_of_reporter = self.sw.search_reporter_articles(reporter_name)
-            if articles_of_reporter is not None:
-                st.write(f"Articles written by the {reporter_name}: ")
-                st.table(articles_of_reporter)
-            else:
-                st.write("No articles found.")
+            self.sw.handle_search_reporter_articles()
+        elif search_type == "newspaper":
+            self.sw.handle_search_newspaper_articles()
+        elif search_type == "date":
+            self.sw.handle_search_date_articles()
+        elif search_type == "word":
+            self.sw.handle_search_word_articles()
 
-    def view_article(self):
-        st.subheader("View Article")
-        title = st.text_input("Enter article title")
-
-        if st.button("View"):
-            article = self.database.get_article(title)
-            if article:
-                st.write(f"Title: {article.title}")
-                st.write(f"Authors: {article.authors}")
-                st.write(f"Date: {article.date}")
-                st.write(f"Newspaper: {article.newspaper}")
-                st.write("Content:")
-                st.write(article.content)
+    def search_word(self):
+        """Handle the functionality for searching a specific word in an article."""
+        st.subheader("Search Word")
+        article_title = st.text_input("Enter article title")
+        paragraph_number = st.text_input("Enter paragraph number")
+        line_number = st.text_input("Enter line number")
+        position_in_line = st.text_input("Enter position in line")
+        if st.button("Search"):
+            if len(article_title) != 0 and len(paragraph_number) != 0 and len(line_number) != 0 and len(
+                    position_in_line) != 0:
+                word = self.sw.search_word_at_position(article_title, paragraph_number, line_number, position_in_line)
+                if word:
+                    st.write(
+                        f"The word at position ({paragraph_number}, {line_number}, {position_in_line}) in the "
+                        f"article '{article_title}' is: {word}")
+                else:
+                    st.write("Word not found.")
             else:
-                st.write("Article not found.")
+                st.write("Please fill all fields.")
+
+    def view(self):
+        """Handle the view functionality, allowing users to view different aspects of the database."""
+        st.subheader("View")
+        view_type = st.selectbox("What do you want to view?",
+                                 ["Please select", "Article", "All words in db", "All words in article",
+                                  "Index of all words in article"])
+        if view_type == "Article":
+            self.tb.handle_article_view()
+        elif view_type == "All words in db":
+            self.tb.handle_all_words()
+        elif view_type == "All words in article":
+            self.tb.handle_all_words_in_article()
+        elif view_type == "Index of all words in article":
+            self.tb.handle_indexes('article')
+
+    def word_groups(self):
+        """Handle the word group functionality, allowing users to manage word groups."""
+        st.subheader("Word Groups")
+        wg_type = st.selectbox("What would you like to do?",
+                               ["Please select", "Create group", "Add word to existing group", "My groups",
+                                "Group index"])
+        if wg_type == "Create group":
+            self.wg.handle_group_creation()
+        elif wg_type == "Add word to existing group":
+            self.wg.handle_group_addition()
+        elif wg_type == "My groups":
+            self.wg.handle_my_groups()
+        elif wg_type == "Group index":
+            self.wg.group_index()
+
+    def phrases(self):
+        """Handle the phrases functionality, allowing users to define and search for phrases."""
+        st.subheader("Phrases")
+        choice = st.selectbox("What would you like to do?", ["Please select", "Define phrase manually",
+                                                             "manual phrase search", "phrases in text"])
+        if choice == "Define phrase manually":
+            self.ph.manual_phrase_definition()
+        elif choice == "phrases in text":
+            self.ph.phrases_in_text()
+        elif choice == "manual phrase search":
+            self.ph.manual_phrase_search()
 
     def word_statistics(self):
+        """Handle the word statistics functionality, providing various statistics about words in articles."""
         st.subheader("Word Statistics")
         title = st.text_input("Enter article title (leave blank for all articles)")
 
         if st.button("Get Statistics"):
+            stats = Stats()  # Create an instance of the Stats class
+
             if title:
-                words = self.database.get_all_words_in_article(title)
-                st.write(f"Words in article '{title}':")
+                # Statistics for a specific article
+                words = stats.num_of_chars_per_word_in_article(title)
+                if not words:
+                    st.error(f"No words found for article '{title}'. The article might not exist or be empty.")
+                    return
+                st.write(f"Statistics for article '{title}':")
+                page_count = 1  # Single article is always one page
+
+                # Article-specific statistics
+                char_count = stats.num_of_chars_in_article(title)
+                word_count = stats.num_of_words_in_article(title)[0][0]
+                avg_chars_per_word = stats.avg_num_of_chars_per_word_in_article(title)
+                avg_words_per_line = stats.avg_words_in_line(title)[0][0]
+                avg_chars_per_line = stats.avg_of_characters_in_line(title)
+                avg_words_per_paragraph = stats.avg_words_in_paragraph(title)[0][0]
+                avg_chars_per_paragraph = stats.avg_chars_in_paragraph(title)
+
+                # Get full article text for sentence counting
+                article = self.tb.build_entire_text(title)
+                content = article[3]
+                sentence_count = count_sentences(content)
             else:
-                words = self.database.get_all_words()
-                st.write("Words in all articles:")
+                # Statistics for all articles
+                words = stats.num_of_chars_per_word()
+                if not words:
+                    st.error("No words found in the database. The database might be empty.")
+                    return
+                st.write("Statistics for all articles:")
 
-            word_counts = {}
-            for word in words:
-                if word[0] in word_counts:
-                    word_counts[word[0]] += 1
-                else:
-                    word_counts[word[0]] = 1
+                db_handler = DB_handler()
 
-            sorted_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)
-            for word, count in sorted_words[:20]:
-                st.write(f"{word}: {count}")
 
-    def print_words_dictionary(self):
-        st.subheader("Print Words Dictionary")
-        title = st.text_input("Enter article title")
+                # Database-wide statistics
+                char_count = stats.num_of_chars_in_db()[0][0]
+                word_count = stats.num_of_words_in_db()[0][0]
+                avg_chars_per_word = stats.avg_num_of_chars_per_word()
+                page_count = db_handler.get_total_articles()  # Total number of articles (each article is one page)
 
-        if st.button("Print Words Dictionary"):
-            article = self.database.get_article(title)
-            if article:
-                st.write(f"Words Dictionary for article: {article.title}")
-                st.text_area("Words Dictionary", article.print_words_dictionary(), height=400)
+                # These are not available for all articles combined, so we'll skip them
+                avg_words_per_line = None
+                avg_chars_per_line = None
+                avg_words_per_paragraph = None
+                avg_chars_per_paragraph = None
+                sentence_count = None
+
+            # Character statistics
+            st.subheader("Character Statistics")
+            st.write(f"Total characters: {char_count}")
+            st.write(f"Average characters per word: {avg_chars_per_word:.2f}")
+            if avg_chars_per_line:
+                st.write(f"Average characters per line: {avg_chars_per_line:.2f}")
+            if avg_chars_per_paragraph:
+                st.write(f"Average characters per paragraph: {avg_chars_per_paragraph:.2f}")
+            # st.write(f"Average characters per page: {char_count / page_count:.2f}") #חושב שלא רלוונטי כי תמיד מס העמודים =1
+            st.write("----------------------")
+
+            # Word statistics
+            st.subheader("Word Statistics")
+            st.write(f"Total words: {word_count}")
+            if avg_words_per_line:
+                st.write(f"Average words per line: {avg_words_per_line:.2f}")
+            if avg_words_per_paragraph:
+                st.write(f"Average words per paragraph: {avg_words_per_paragraph:.2f}")
+            st.write(f"Average words per page: {word_count / page_count:.2f}")
+            st.write("----------------------")
+
+            # Sentence statistics (only for single article)
+            if sentence_count:
+                st.subheader("Sentence Statistics")
+                st.write(f"Estimated total sentences: {sentence_count}")
+                st.write(f"Average sentences per page: {sentence_count / page_count:.2f}")
+                st.write("----------------------")
+
+            # Page statistics (only for all articles)
+            if not title:
+                st.subheader("Page Statistics")
+                st.write(f"Total pages: {page_count}")
+                st.write("----------------------")
+
+
+            # Word frequency
+            st.subheader("Word Frequency")
+            if title:
+                word_freq = stats.frequency_list_article(title)
             else:
-                st.write("Article not found.")
+                word_freq = stats.frequency_list_db()
+
+            # if len(word_freq[0]) == 3:
+            word_freq.sort(key=lambda x: x[2], reverse=True)  # Sort by frequency (descending)
+            top_words = [(word, freq) for _, word, freq in word_freq[:20]]  # Get top 20 words
+            # else:
+            #     word_freq.sort(key=lambda x: x[1], reverse=True)  # Sort by frequency (descending)
+            #     top_words = word_freq[:20]  # Get top 20 words
+
+
+            freq_df = pd.DataFrame(top_words, columns=['Word', 'Frequency'])
+            st.write("Top 20 most frequent words:")
+            st.dataframe(freq_df, hide_index=True)
+            st.write("----------------------")
+
+            # Word length distribution
+            st.subheader("Word Length Distribution")
+            # if len(word_freq[0]) == 3:
+            word_lengths = [len(word) for _, word, _ in word_freq]
+            word_examples = {len(word): word for _, word, _ in word_freq}
+            # else:
+            #     word_lengths = [len(word) for word, _ in word_freq]
+            #     word_examples = {len(word): word for word, _ in word_freq}
+
+            length_freq = Counter(word_lengths)
+            length_df = pd.DataFrame(sorted(length_freq.items()), columns=['Word Length', 'Frequency'])
+
+            # Filter out lengths with zero frequencies
+            length_df = length_df[length_df['Frequency'] > 0]
+
+            # Add example words to the dataframe
+            length_df['Example'] = length_df['Word Length'].map(word_examples)
+
+            fig = px.bar(length_df, x='Word Length', y='Frequency',
+                         title='Distribution of Word Lengths',
+                         labels={'Word Length': 'Number of Characters', 'Frequency': 'Number of Words'},
+                         hover_data=['Example'])
+
+            fig.update_layout(
+                xaxis_title="Number of Characters in Word",
+                yaxis_title="Number of Words",
+                xaxis=dict(tickmode='linear', dtick=1)
+            )
+
+            # Display the plot
+            st.plotly_chart(fig, use_container_width=True)
